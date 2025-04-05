@@ -6,7 +6,9 @@ export interface Product {
   importPrice: number;
   brandId: number;
   categoryId: number;
-  inventory: number;
+  stock: number;
   sold: number;
   images: string[];
+  //number of favorite
+  score: number;
 }
