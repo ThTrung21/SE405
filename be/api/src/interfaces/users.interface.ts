@@ -8,8 +8,9 @@ export interface User {
   dob: Date;
   role: Role;
   likedproduct: string[];
+  status: Status;
   //list of past purchases
   orderHistory: string[];
   address: string;
 }
-import { Role } from './auth.interface';
+import { Role, Status } from './auth.interface';
