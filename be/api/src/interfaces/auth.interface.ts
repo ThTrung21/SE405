@@ -9,6 +9,12 @@ export enum Role {
   CUSTOMER = 'CUSTOMER',
   STAFF = 'STAFF',
 }
+export enum Status {
+  ACTIVE = 'ACTIVE',
+  OFFLINE = 'OFFLINE',
+  TERMINATED = 'TERMINATED',
+}
+
 export enum TokenType {
   REFRESH = 'REFRESH',
   ACCESS = 'ACCESS',
