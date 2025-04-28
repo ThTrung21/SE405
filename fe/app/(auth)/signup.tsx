@@ -14,7 +14,6 @@ import { Eye, EyeOff } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 
 import AppButton from '../../components/appButton';
-import Logo from '../../assets/logo.png';
 
 const SignUpScreen: React.FC = () => {
   const router = useRouter();
@@ -25,7 +24,7 @@ const SignUpScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.logoContainer}>
-        <Image source={Logo} style={styles.logo} />
+        <Image source={require('../../assets/logo.png')} style={styles.logo} />
       </View>
 
       <Text style={styles.welcome}>WELCOME BACK</Text>

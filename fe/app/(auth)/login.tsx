@@ -15,7 +15,6 @@ import { Link } from 'expo-router';
 import { Eye, EyeOff } from 'lucide-react-native';
 
 import AppButton from '../../components/appButton';
-import Logo from '../../assets/logo.png';
 
 const LoginScreen: React.FC = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -23,7 +22,7 @@ const LoginScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.logoContainer}>
-        <Image source={Logo} style={styles.logo as ImageStyle} />
+        <Image source={require('../../assets/logo.png')} style={styles.logo as ImageStyle} />
       </View>
 
       <Text style={styles.greeting}>Hello !</Text>
