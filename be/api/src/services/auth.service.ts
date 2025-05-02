@@ -1,52 +1,60 @@
-import { hash, compare } from 'bcrypt';
-import { sign } from 'jsonwebtoken';
+import { compare, hash } from 'bcrypt';
+import { sign, verify } from 'jsonwebtoken';
 import { Service } from 'typedi';
 import { SECRET_KEY } from '@config';
-import { HttpException } from '@exceptions/httpException';
-import { DataStoredInToken, TokenData } from '@interfaces/auth.interface';
+import { DB } from '@/database';
+import { CreateUserDto } from '@dtos/users.dto';
+import { HttpException } from '@/exceptions/httpException';
+import { DataStoredInToken, TokenData, TokenPayload, TokenType } from '@interfaces/auth.interface';
 import { User } from '@interfaces/users.interface';
-import { UserModel } from '@models/users.model';
+import { RefreshTokenDto } from '@/dtos/auth.dto';
 
-const createToken = (user: User): TokenData => {
-  const dataStoredInToken: DataStoredInToken = { id: user.id };
+const createToken = (user: User, exp: number, type: TokenType): TokenData => {
+  const dataStoredInToken: DataStoredInToken = { id: user.id, role: user.role, type: type };
   const expiresIn: number = 60 * 60;
 
   return { expiresIn, token: sign(dataStoredInToken, SECRET_KEY, { expiresIn }) };
 };
 
-const createCookie = (tokenData: TokenData): string => {
-  return `Authorization=${tokenData.token}; HttpOnly; Max-Age=${tokenData.expiresIn};`;
-};
-
 @Service()
 export class AuthService {
-  public async signup(userData: User): Promise<User> {
-    const findUser: User = UserModel.find(user => user.email === userData.email);
-    if (findUser) throw new HttpException(409, `This email ${userData.email} already exists`);
+  public async signup(userData: CreateUserDto): Promise<User> {
+    const findUser: User = await DB.User.findOne({ where: { email: userData.email } });
+    if (findUser) throw new HttpException.HttpException(409, `This email ${userData.email} already exists`);
 
     const hashedPassword = await hash(userData.password, 10);
-    const createUserData: User = { ...userData, id: UserModel.length + 1, password: hashedPassword };
+    const createUserData: User = await DB.User.create({ ...userData, password: hashedPassword });
 
     return createUserData;
   }
 
-  public async login(userData: User): Promise<{ cookie: string; findUser: User }> {
-    const findUser: User = UserModel.find(user => user.email === userData.email);
-    if (!findUser) throw new HttpException(409, `This email ${userData.email} was not found`);
+  public async login(userData: CreateUserDto): Promise<{ token: TokenPayload; findUser: User }> {
+    const findUser: User = await DB.User.findOne({ where: { email: userData.email } });
+    if (!findUser) throw new HttpException.HttpException(409, `This email ${userData.email} was not found`);
 
     const isPasswordMatching: boolean = await compare(userData.password, findUser.password);
-    if (!isPasswordMatching) throw new HttpException(409, "You're password not matching");
+    if (!isPasswordMatching) throw new HttpException.HttpException(409, 'Password not matching');
 
-    const tokenData = createToken(findUser);
-    const cookie = createCookie(tokenData);
+    const accessTokenExp = 60 * 60;
+    const refreshTokenExp = 24 * 60 * 60;
+    const { token: accessToken } = createToken(findUser, accessTokenExp, TokenType.ACCESS);
+    const { token: refreshToken } = createToken(findUser, refreshTokenExp, TokenType.REFRESH);
 
-    return { cookie, findUser };
+    return { token: { accessToken, refreshToken }, findUser };
   }
 
-  public async logout(userData: User): Promise<User> {
-    const findUser: User = UserModel.find(user => user.email === userData.email && user.password === userData.password);
-    if (!findUser) throw new HttpException(409, "User doesn't exist");
+  public async refreshToken(tokenData: RefreshTokenDto): Promise<{ token: string }> {
+    const { refreshToken } = tokenData;
+    const { id, type } = verify(refreshToken, SECRET_KEY) as DataStoredInToken;
 
-    return findUser;
+    if (type !== TokenType.REFRESH) throw new HttpException.HttpException(403, 'Access permission denied!');
+
+    const findUser = await DB.User.findByPk(id);
+    if (!findUser) throw new HttpException.HttpException(409, `This user ${id} was not found`);
+
+    const accessTokenExp = 60 * 60;
+    const { token } = createToken(findUser, accessTokenExp, TokenType.ACCESS);
+
+    return { token };
   }
 }
