@@ -8,6 +8,10 @@ export class ProductItem {
 
   @IsNumber()
   public quantity: number;
+
+  // @IsNumber()
+  // public sumPrice: number;
+
 }
 
 export class CreateOrderDto {
@@ -21,7 +25,7 @@ export class CreateOrderDto {
   public receiptPhone: string;
 
   @IsNotEmpty()
-  public orderPrice: string;
+  public orderPrice: number;
 
   @IsEnum(OrderStatus)
   @IsOptional()
@@ -35,15 +39,15 @@ export class CreateOrderDto {
 export class UpdateOrderDto {
   @IsString()
   @IsOptional()
-  public orderAddress?: string;
+  public receiptAddress?: string;
 
   @IsString()
   @IsOptional()
-  public orderName?: string;
+  public receiptName?: string;
 
   @IsString()
   @IsOptional()
-  public orderPhone?: string;
+  public receiptPhone?: string;
 
   @IsEnum(OrderStatus)
   @IsOptional()
