@@ -1,15 +1,17 @@
 import { NextFunction, Request, Response } from 'express';
 import { Container } from 'typedi';
-import { RequestWithUser } from '@interfaces/auth.interface';
+import { CreateUserDto } from '@dtos/users.dto';
 import { User } from '@interfaces/users.interface';
+import { RequestWithUser } from '@interfaces/auth.interface';
 import { AuthService } from '@services/auth.service';
+import { RefreshTokenDto } from '@/dtos/auth.dto';
 
 export class AuthController {
   public auth = Container.get(AuthService);
 
-  public signUp = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  public signUp = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const userData: User = req.body;
+      const userData: CreateUserDto = req.body;
       const signUpUserData: User = await this.auth.signup(userData);
 
       res.status(201).json({ data: signUpUserData, message: 'signup' });
@@ -18,25 +20,40 @@ export class AuthController {
     }
   };
 
-  public logIn = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  public logIn = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const userData: User = req.body;
-      const { cookie, findUser } = await this.auth.login(userData);
+      const userData: CreateUserDto = req.body;
+      console.log(req.body);
+      const { token, findUser } = await this.auth.login(userData);
 
-      res.setHeader('Set-Cookie', [cookie]);
-      res.status(200).json({ data: findUser, message: 'login' });
+      // res.setHeader('Set-Cookie', [cookie]);
+      res.status(200).json({ data: findUser, token: token, message: 'login' });
     } catch (error) {
       next(error);
     }
   };
 
-  public logOut = async (req: RequestWithUser, res: Response, next: NextFunction): Promise<void> => {
+  public refreshToken = async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
-      const userData: User = req.user;
-      const logOutUserData: User = await this.auth.logout(userData);
+      const tokenData: RefreshTokenDto = req.body;
+      const refreshTokenData = await this.auth.refreshToken(tokenData);
+      res.status(200).json({ data: refreshTokenData, message: 'refresh' });
+    } catch (error) {
+      next(error);
+    }
+  };
 
-      res.setHeader('Set-Cookie', ['Authorization=; Max-age=0']);
-      res.status(200).json({ data: logOutUserData, message: 'logout' });
+  public userRoute = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      res.status(200).json({ data: req.user, message: 'you have accessed user route!' });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public adminRoute = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      res.status(200).json({ data: req.user, message: 'you have accessed admin route!' });
     } catch (error) {
       next(error);
     }
