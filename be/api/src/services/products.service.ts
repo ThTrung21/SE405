@@ -1,7 +1,7 @@
 import { Service } from 'typedi';
 import { DB } from '@/database';
 import { CreateProductDto, UpdateProductDto } from '@/dtos/products.dto';
-import { HttpException } from '@/exceptions/httpException';
+import { HttpException } from '@/exceptions/HttpException';
 import { Product } from '@/interfaces/products.interface';
 @Service()
 export class ProductService {

@@ -4,7 +4,7 @@ import { CreateOrderDto } from '@/dtos/orders.dto';
 import { Order } from '@interfaces/orders.interface';
 import { OrderService } from '@/services/orders.service';
 import { RequestWithUser, Role } from '@/interfaces/auth.interface';
-import { HttpException } from '@/exceptions/httpException';
+import { HttpException } from '@/exceptions/HttpException';
 
 export class OrderController {
   public order = Container.get(OrderService);

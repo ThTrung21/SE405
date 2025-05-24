@@ -9,6 +9,10 @@ export interface User {
   role: Role;
   likedproduct: string[];
   status: Status;
+
+  //keep track of staff's last assigned chat
+  lastAssignedAt?: Date;
+
   //list of past purchases
   orderHistory: string[];
   address: string;

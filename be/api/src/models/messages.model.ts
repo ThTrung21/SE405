@@ -1,6 +1,7 @@
 import { Message } from '@/interfaces/message.interface';
 
 import { DataTypes, Model, Optional, Sequelize } from 'sequelize';
+import { AllowNull } from 'sequelize-typescript';
 
 export type MessageCreationAttributes = Optional<Message, 'id'>;
 export class MessageModel extends Model<Message, MessageCreationAttributes> implements Message {
@@ -8,6 +9,7 @@ export class MessageModel extends Model<Message, MessageCreationAttributes> impl
   public conversationId: number;
   public senderId: number;
   public productId: number;
+  public content: string;
   public readonly createdAt!: Date;
 }
 const initModel = (sequelize: Sequelize): typeof MessageModel => {
@@ -29,6 +31,10 @@ const initModel = (sequelize: Sequelize): typeof MessageModel => {
       productId: {
         allowNull: true,
         type: DataTypes.INTEGER,
+      },
+      content: {
+        allowNull: false,
+        type: DataTypes.STRING,
       },
     },
     {

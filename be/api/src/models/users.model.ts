@@ -29,6 +29,8 @@ export class UserModel extends Model<User, UserCreationAttributes> implements Us
   public orderHistory: string[];
   public address: string;
 
+  public lastAssignedAt?: Date;
+
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
@@ -83,6 +85,10 @@ const initModel = (sequelize: Sequelize): typeof UserModel => {
       address: {
         allowNull: true,
         type: DataTypes.STRING(200),
+      },
+      lastAssignedAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
       },
     },
     {

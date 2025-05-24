@@ -5,6 +5,7 @@ export enum ChatType {
 export enum ChatStatus {
   ACTIVE = 'ACTIVE',
   PENDING = 'PENDING',
+  COMPLETED = 'COMPLETED', //for order-bound conversation
   EXPIRED = 'EXPIRED',
 }
 

@@ -4,4 +4,5 @@ export interface Message {
   senderId: number;
   productId?: number; //for product attached message
   createdAt?: Date;
+  content: string;
 }

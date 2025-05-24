@@ -1,6 +1,6 @@
 import { compare, hash } from 'bcrypt';
 import { Service } from 'typedi';
-import { HttpException } from '@exceptions/httpException';
+import { HttpException } from '@exceptions/HttpException';
 import { User } from '@interfaces/users.interface';
 import { UserModel } from '@models/users.model';
 import { Role } from '@/interfaces/auth.interface';
@@ -113,4 +113,3 @@ export class UserService {
     return findUser;
   }
 }
-

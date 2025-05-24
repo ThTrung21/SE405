@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 
-export class CreateMessageDto {
+export class SendMessageDto {
   @IsNumber()
   @IsNotEmpty()
   public conversationId: number;
@@ -12,4 +12,7 @@ export class CreateMessageDto {
   @IsNumber()
   @IsOptional()
   public productId: number;
+
+  @IsNotEmpty()
+  public content: string;
 }
