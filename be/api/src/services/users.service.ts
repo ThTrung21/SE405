@@ -6,7 +6,7 @@ import { UserModel } from '@models/users.model';
 import { Role } from '@/interfaces/auth.interface';
 import { DB } from '@/database';
 import { CreateUserDto, UpdatePasswordDto, UpdateUserDto, UpdateUserLikeDto } from '@/dtos/users.dto';
-import { faker } from '@faker-js/faker/.';
+import { faker } from '@faker-js/faker';
 
 @Service()
 export class UserService {

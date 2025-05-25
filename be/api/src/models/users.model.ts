@@ -63,7 +63,7 @@ const initModel = (sequelize: Sequelize): typeof UserModel => {
         type: DataTypes.DATE,
       },
       status: {
-        defaultValue: true,
+        defaultValue: Status.OFFLINE,
         type: DataTypes.ENUM(...Object.values(Status)),
       },
       role: {
