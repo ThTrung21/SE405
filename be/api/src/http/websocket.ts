@@ -1,27 +1,55 @@
-import { Server, Socket } from 'socket.io';
-import { ChatService } from '../services/chat.service';
-import { validateChatMessage } from '../dtos/chat.dto';
+import { Server as HTTPServer } from 'http';
+import { Server as SocketIOServer, Socket } from 'socket.io';
+import { verify } from 'jsonwebtoken';
+import { MessageModel } from '../models/messages.model';
 
-export const initSocketServer = (io: Server) => {
-  io.on('connection', (socket: Socket) => {
-    console.log(`Socket connected: ${socket.id}`);
+interface AuthenticatedSocket extends Socket {
+  user?: { id: number };
+}
 
-    socket.on('joinRoom', (roomId: string) => {
-      socket.join(roomId);
+export const initWebSocket = (server: HTTPServer): SocketIOServer => {
+  const io = new SocketIOServer(server, {
+    cors: {
+      origin: '*',
+      methods: ['GET', 'POST'],
+    },
+  });
+
+  io.use((socket: AuthenticatedSocket, next) => {
+    const token = socket.handshake.auth.token;
+    if (!token) return next(new Error('Authentication token required'));
+
+    try {
+      const decoded = verify(token, process.env.JWT_SECRET as string);
+      socket.user = decoded as { id: number };
+      next();
+    } catch (err) {
+      next(new Error('Invalid token'));
+    }
+  });
+
+  io.on('connection', (socket: AuthenticatedSocket) => {
+    console.log(`User ${socket.user?.id} connected`);
+
+    socket.on('joinConversation', (conversationId: number) => {
+      socket.join(`conversation-${conversationId}`);
     });
 
-    socket.on('chatMessage', async msg => {
-      try {
-        const valid = validateChatMessage(msg); // Your DTO validator
-        const saved = await ChatService.handleMessage(valid);
-        io.to(msg.roomId).emit('chatMessage', saved);
-      } catch (error) {
-        socket.emit('errorMessage', { error: error.message });
-      }
+    socket.on('sendMessage', async data => {
+      const { conversationId, productId, content } = data;
+      const senderId = socket.user?.id;
+
+      const message = await MessageModel.create({ conversationId, productId, senderId, content });
+
+      io.to(`conversation-${conversationId}`).emit('newMessage', {
+        ...message.toJSON(),
+      });
     });
 
     socket.on('disconnect', () => {
-      console.log(`Socket disconnected: ${socket.id}`);
+      console.log(`User ${socket.user?.id} disconnected`);
     });
   });
+
+  return io;
 };

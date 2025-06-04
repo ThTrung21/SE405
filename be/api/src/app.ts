@@ -31,20 +31,25 @@ export class App {
     this.initializeSwagger();
     this.initializeErrorHandling();
   }
-
-  public listen() {
-    this.app
-      .listen(this.port, () => {
-        logger.info(`=================================`);
-        logger.info(`======= ENV: ${this.env} =======`);
-        logger.info(`🚀 App listening on http://${HOST_NAME}:${this.port}`);
-        logger.info(`=================================`);
-      })
-      .on('error', err => {
-        logger.error('Failed to start server:', err);
-        process.exit(1);
-      });
+  public startLogs() {
+    logger.info('=================================');
+    logger.info(`======= ENV: ${this.env} =======`);
+    logger.info(`🚀 App listening on http://${HOST_NAME}:${this.port}`);
+    logger.info('=================================');
   }
+  // public listen() {
+  //   this.app
+  //     .listen(this.port, () => {
+  //       logger.info(`=================================`);
+  //       logger.info(`======= ENV: ${this.env} =======`);
+  //       logger.info(`🚀 App listening on http://${HOST_NAME}:${this.port}`);
+  //       logger.info(`=================================`);
+  //     })
+  //     .on('error', err => {
+  //       logger.error('Failed to start server:', err);
+  //       process.exit(1);
+  //     });
+  // }
 
   public getServer() {
     return this.app;
