@@ -20,3 +20,5 @@ const PRODUCT_IMG = [
   'https://firebasestorage.googleapis.com/v0/b/dango-de20b.appspot.com/o/seed%2Fnuoc-ngot-co-ga-coca-cola-zero-chai-390ml-202110281746112376.jpg?alt=media&token=d20e1b01-15ef-47db-a5bb-86957d8d0f90',
   'https://firebasestorage.googleapis.com/v0/b/dango-de20b.appspot.com/o/seed%2Fnuoc-ngot-mirinda-huong-cam-chai-390ml-202310311346499855.jpg?alt=media&token=d5d836bc-f855-470f-bc72-ab046409ca4d',
 ];
+
+export { PRODUCT_IMG, AVATARS };

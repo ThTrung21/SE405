@@ -7,10 +7,21 @@ import { Role } from '@/interfaces/auth.interface';
 import { DB } from '@/database';
 import { CreateUserDto, UpdatePasswordDto, UpdateUserDto, UpdateUserLikeDto } from '@/dtos/users.dto';
 import { faker } from '@faker-js/faker';
-
+import { AVATARS } from '@/database/seeders/constants';
 @Service()
 export class UserService {
   public async findAllUser(): Promise<User[]> {
+    const allUser: User[] = await DB.User.findAll({
+      where: { role: Role.CUSTOMER },
+      attributes: {
+        exclude: ['password'],
+      },
+    });
+
+    return allUser;
+  }
+
+  public async findAllUserForSeed(): Promise<User[]> {
     const allUser: User[] = await DB.User.findAll({
       where: { role: Role.CUSTOMER },
       attributes: {
@@ -19,28 +30,26 @@ export class UserService {
           [
             DB.sequelize.literal(`(
               SELECT COUNT(*)
-              FROM orders as o
-              where
-              o.user_id = UserModel.id
-          )`),
+              FROM orders AS o
+              WHERE o.user_id = UserModel.id
+            )`),
             'orderCount',
           ],
           [
-            `(
-              SELECT SUM(oi.total_price)
-              FROM orders as o
-              left join order_items oi
-              on oi.order_id = o.id
-              where o.user_id = UserModel.id
-              group by o.user_id
-            )`,
+            DB.sequelize.literal(`(
+              SELECT COALESCE(SUM(o.total_price), 0)
+              FROM orders AS o
+              WHERE o.user_id = UserModel.id
+            )`),
             'totalPayment',
           ],
         ],
       },
     });
+
     return allUser;
   }
+
   public async findAllStaff(): Promise<User[]> {
     const allStaff: User[] = await DB.User.findAll({
       where: { role: Role.STAFF },

@@ -11,7 +11,6 @@ export class ProductItem {
 
   // @IsNumber()
   // public sumPrice: number;
-
 }
 
 export class CreateOrderDto {

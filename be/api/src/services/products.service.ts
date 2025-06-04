@@ -67,16 +67,16 @@ export class ProductService {
   //seeding command
   public async seedProduct(dto: CreateProductDto): Promise<Product> {
     const { brandId, ...product } = dto;
-
-    const findBrand = await DB.Brands.findOne({ where: { id: brandId } });
-    console.log(findBrand);
-    let productBrandId: number;
-    if (!findBrand) {
-      const createBrand = await DB.Brands.create({ id: brandId });
-      productBrandId = createBrand.id;
-    } else {
-      productBrandId = findBrand.id;
-    }
+    const productBrandId = brandId;
+    // const findBrand = await DB.Brands.findOne({ where: { id: brandId } });
+    // console.log(findBrand);
+    // let productBrandId: number;
+    // if (!findBrand) {
+    //   const createBrand = await DB.Brands.create({ id: brandId });
+    //   productBrandId = createBrand.id;
+    // } else {
+    //   productBrandId = findBrand.id;
+    // }
 
     const createProductData: Product = await DB.Product.create({ ...product, brandId: productBrandId });
     return createProductData;

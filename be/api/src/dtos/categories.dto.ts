@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateCategoriesDto {
   @IsString()
@@ -6,5 +6,6 @@ export class CreateCategoriesDto {
   name: string;
 
   @IsString()
-  description: string;
+  @IsOptional()
+  desc: string;
 }
