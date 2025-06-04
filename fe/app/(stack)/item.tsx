@@ -1,18 +1,24 @@
 import React, { useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, Link } from 'expo-router';
 
 import FavoriteButton from '../../components/favoriteButton';
 import Header from '../../components/header';
 import AppButton from '../../components/appButton';
+import { ImageSlider } from '../../components/ImageSlider';
 
 const petData = [
   {
     id: '1',
     name: 'Alaskan Malamute Grey',
     price: 12,
-    image: require('../../assets/dog1.png'),
+    images: [
+      require('../../assets/dog1.png'),
+      require('../../assets/dog2.png'),
+      require('../../assets/dog3.png'),
+      require('../../assets/dog4.png'),
+    ],
     description: 'Strong and friendly dog, perfect for cold climates.',
     rating: 4.5,
     reviews: 50,
@@ -21,7 +27,12 @@ const petData = [
     id: '2',
     name: 'Poodle Tiny Dairy Cow',
     price: 25,
-    image: require('../../assets/dog2.png'),
+    images: [
+      require('../../assets/dog2.png'),
+      require('../../assets/dog1.png'),
+      require('../../assets/dog3.png'),
+      require('../../assets/dog4.png'),
+    ],
     description: 'Smart and active, great companion for families.',
     rating: 4.8,
     reviews: 80,
@@ -30,7 +41,12 @@ const petData = [
     id: '3',
     name: 'Pomeranian White',
     price: 20,
-    image: require('../../assets/dog3.png'),
+    images: [
+      require('../../assets/dog3.png'),
+      require('../../assets/dog1.png'),
+      require('../../assets/dog2.png'),
+      require('../../assets/dog4.png'),
+    ],
     description: 'Cute and fluffy, very playful and loving.',
     rating: 4.2,
     reviews: 40,
@@ -39,7 +55,12 @@ const petData = [
     id: '4',
     name: 'Pomeranian White',
     price: 50,
-    image: require('../../assets/dog4.png'),
+    images: [
+      require('../../assets/dog4.png'),
+      require('../../assets/dog1.png'),
+      require('../../assets/dog2.png'),
+      require('../../assets/dog3.png'),
+    ],
     description: 'Rare breed, charming and loyal companion.',
     rating: 4.9,
     reviews: 60,
@@ -47,7 +68,7 @@ const petData = [
 ];
 
 export default function Item() {
-  const { id } = useLocalSearchParams(); // get id from route params
+  const { id } = useLocalSearchParams();
   const pet = petData.find((p) => p.id === id);
 
   const [quantity, setQuantity] = useState(1);
@@ -69,8 +90,8 @@ export default function Item() {
       {/* Header */}
       <Header title="Pet Details" />
       <View style={styles.card}>
-        {/* Pet Image */}
-        <Image source={pet.image} style={styles.image} />
+        {/* Pet Images Slider */}
+        <ImageSlider images={pet.images} />
 
         {/* Product Info */}
         <View style={styles.info}>
@@ -128,11 +149,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     margin: 16,
-  },
-  image: {
-    width: '100%',
-    maxHeight: 400,
-    resizeMode: 'cover',
   },
   info: {
     padding: 16,

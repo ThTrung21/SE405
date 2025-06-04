@@ -29,6 +29,7 @@ const categories: Category[] = [
   { label: 'Biscuit', icon: 'pizza-outline', activeIcon: 'pizza' },
   { label: 'Small', icon: 'pricetag-outline', activeIcon: 'pricetag' },
   { label: 'Large', icon: 'pricetags-outline', activeIcon: 'pricetags' },
+  { label: 'Large', icon: 'pricetags-outline', activeIcon: 'pricetags' },
 ];
 
 type Pet = {

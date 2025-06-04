@@ -81,6 +81,18 @@ export default function RootLayout() {
         }}
       />
       <Tabs.Screen
+        name="productmanage"
+        options={{
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? 'cube' : 'cube-outline'}
+              size={24}
+              color={focused ? '#003459' : '#888'}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           tabBarIcon: ({ color, size, focused }) => (
