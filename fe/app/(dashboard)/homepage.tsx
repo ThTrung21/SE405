@@ -29,7 +29,6 @@ const categories: Category[] = [
   { label: 'Biscuit', icon: 'pizza-outline', activeIcon: 'pizza' },
   { label: 'Small', icon: 'pricetag-outline', activeIcon: 'pricetag' },
   { label: 'Large', icon: 'pricetags-outline', activeIcon: 'pricetags' },
-  { label: 'Large', icon: 'pricetags-outline', activeIcon: 'pricetags' },
 ];
 
 type Pet = {
@@ -68,13 +67,43 @@ const pets: Pet[] = [
 
 export default function Homepage() {
   const [selectedCategoryIndex, setSelectedCategoryIndex] = useState<number>(0);
-
+  const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
+
+  const filteredPets = pets.filter(pet => 
+    pet.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <MainHeader title="Pets" />
+      {/* Top Bar: Cart Icon and Explore Title */}
+      <View style={styles.topBar}>
+        <Text style={styles.exploreTitle}>Explore</Text>
+        <TouchableOpacity style={styles.cartIcon} onPress={() => router.push('/(stack)/cart')}>
+          <Ionicons name="cart-outline" size={28} color="#003459" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <Ionicons name="search" size={22} color="#666" style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Find best item for your pet"
+          placeholderTextColor="#888"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+      </View>
+
+      {/* Discount Banner (moved above category) */}
+      <View style={styles.bannerContainer}>
+        <Image
+          source={require('../../assets/discount-banner.png')}
+          style={styles.bannerImage}
+          resizeMode="cover"
+        />
+      </View>
 
       {/* Categories */}
       <ScrollView
@@ -105,25 +134,23 @@ export default function Homepage() {
 
       {/* Pet Grid */}
       <FlatList
-        data={pets}
+        data={filteredPets}
         keyExtractor={(item) => item.id}
         numColumns={2}
-        contentContainerStyle={{ paddingBottom: 80 }}
+        contentContainerStyle={{ paddingBottom: 100 }}
         columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 16 }}
+        style={styles.petGrid}
         renderItem={({ item }) => (
-          <View style={styles.card}>
-            <View>
-              <Image source={item.image} style={styles.image} />
-              <TouchableOpacity
-                onPress={() => router.push({ pathname: '/(stack)/item', params: { id: item.id } })}
-                style={styles.cartButton}
-              >
-                <Ionicons name="bag-handle" size={20} color="#fff" />
-              </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.card}
+            onPress={() => router.push({ pathname: '/(stack)/item', params: { id: item.id } })}
+          >
+            <Image source={item.image} style={styles.image} />
+            <View style={styles.cardContent}>
+              <Text style={styles.petName}>{item.name}</Text>
+              <Text style={styles.petPrice}>{item.price}</Text>
             </View>
-            <Text style={styles.petName}>{item.name}</Text>
-            <Text style={styles.petPrice}>{item.price}</Text>
-          </View>
+          </TouchableOpacity>
         )}
       />
     </SafeAreaView>
@@ -136,22 +163,79 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     paddingVertical: 24
   },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    marginBottom: 12,
+    minHeight: 40,
+  },
+  exploreTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#003459',
+    textAlign: 'center',
+    flex: 1,
+    fontFamily: 'System',
+  },
+  cartIcon: {
+    position: 'absolute',
+    right: 24,
+    top: 0,
+    padding: 4,
+    zIndex: 2,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    height: 52,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 18,
+    color: '#333',
+    fontWeight: '500',
+    fontFamily: 'System',
+  },
+  bannerContainer: {
+    marginHorizontal: 16,
+    marginBottom: 8,
+    borderRadius: 16,
+    overflow: 'hidden',
+    elevation: 2,
+    backgroundColor: '#fff',
+  },
+  bannerImage: {
+    width: '100%',
+    height: 120,
+    borderRadius: 16,
+  },
   categoriesContainer: {
     paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingVertical: 6,
+    paddingBottom: 16,
   },
   categoryItem: {
     alignItems: 'center',
     marginRight: 16,
+    paddingBottom: 6,
   },
   iconWrapper: {
     backgroundColor: '#f1f1f1',
     padding: 12,
     borderRadius: 14,
-    marginBottom: 6,
   },
   activeIconWrapper: {
-    backgroundColor: '#FAD69C', // light yellow
+    backgroundColor: '#FAD69C',
   },
   categoryLabel: {
     fontSize: 12,
@@ -165,37 +249,33 @@ const styles = StyleSheet.create({
   card: {
     width: '48%',
     backgroundColor: '#fff',
-    borderRadius: 10,
+    borderRadius: 12,
     marginBottom: 20,
     overflow: 'hidden',
-    position: 'relative',
+    borderWidth: 1,
+    borderColor: '#eee',
   },
   image: {
     width: '100%',
     height: 200,
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+  cardContent: {
+    padding: 12,
   },
   petName: {
     fontSize: 13,
     fontWeight: '500',
-    paddingHorizontal: 8,
-    marginTop: 6,
+    color: '#333',
+    marginBottom: 4,
   },
   petPrice: {
     fontSize: 13,
     fontWeight: '600',
     color: '#003366',
-    paddingHorizontal: 8,
-    marginBottom: 8,
   },
-  cartButton: {
-    position: 'absolute',
-    bottom: 8,
-    right: 8,
-    backgroundColor: '#808080',
-    borderRadius: 6,
-    padding: 6,
-    opacity: 0.6,
+  petGrid: {
+    marginTop: 8,
   },
 });
