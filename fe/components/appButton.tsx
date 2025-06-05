@@ -9,6 +9,7 @@ import {
   GestureResponderEvent,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import Colors from '../constants/Colors';
 
 type ButtonVariant = 'primary' | 'secondary' | 'starter';
 
@@ -64,10 +65,8 @@ const AppButton: React.FC<AppButtonProps> = ({
         <ActivityIndicator
           color={
             variant === 'secondary'
-              ? '#003459'
-              : variant === 'starter'
-              ? '#f7931e'
-              : '#fff'
+              ? Colors.primary
+              : Colors.accent
           }
         />
       ) : (
@@ -100,20 +99,20 @@ const styles = StyleSheet.create<{
     borderWidth: 1,
   },
   primaryButton: {
-    backgroundColor: '#003459',
-    borderColor: '#003459',
+    backgroundColor: Colors.accent,
+    borderColor: Colors.accent,
     width: '100%',
     flexShrink: 1
   },
   secondaryButton: {
     backgroundColor: '#fff',
-    borderColor: '#003459',
+    borderColor: Colors.primary,
     width: '100%'
   },
   starterButton: {
     paddingVertical: 14,
-    backgroundColor: '#003459',
-    borderColor: '#003459',
+    backgroundColor: Colors.accent,
+    borderColor: Colors.accent,
   },
   buttonText: {
     fontSize: 16,
@@ -121,7 +120,7 @@ const styles = StyleSheet.create<{
     color: '#fff',
   },
   secondaryText: {
-    color: '#003459',
+    color: Colors.primary,
   },
   disabled: {
     opacity: 0.5,
