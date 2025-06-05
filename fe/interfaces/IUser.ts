@@ -12,6 +12,7 @@ export interface IUser {
   createdAt: string | Date;
   updatedAt: string | Date;
   deletedAt?: any | Date;
+  lastAssignedAt?: Date | string;
   avatar?: string;
   OrderModels: any[];
 }
