@@ -187,7 +187,7 @@ class Seeder {
               receiptAddress: faker.location.streetAddress(),
               receiptName: faker.person.fullName(),
               receiptPhone: faker.phone.number({ style: 'national' }),
-              status: Object.values(OrderStatus)[faker.number.int({ min: 0, max: 2 })],
+              status: Object.values(OrderStatus)[faker.number.int({ min: 0, max: 3 })],
               orderPrice: faker.number.int({ min: 100, max: 1000 }),
             };
 
