@@ -37,6 +37,16 @@ export class ProductController {
       next(error);
     }
   };
+  public getProductByCategory = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const categoryId = Number(req.params.id);
+      const findFilteredProductsData: Product[] = await this.product.findProductsByCategory(categoryId);
+
+      res.status(200).json({ data: findFilteredProductsData, message: 'findMany' });
+    } catch (error) {
+      next(error);
+    }
+  };
   public getProductsByIds = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { ids } = req.body;

@@ -1,3 +1,4 @@
+import { categories } from "app/(dashboard)/homepage";
 import httpRequest from "../services/httpRequest";
 
 export const getAllProducts = () => {
@@ -17,7 +18,9 @@ export const searchProductsByName = (value: string) => {
 export const createNewProduct = (data: any) => {
   return httpRequest.post("/products", data);
 };
-
+export const getFilteredProduct = (categoryId: number) => {
+  return httpRequest.get(`/products/filtered/${categoryId}`);
+};
 export const getProductById = (productId: string | number) => {
   return httpRequest.get(`/products/${productId}`);
 };

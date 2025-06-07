@@ -12,7 +12,7 @@ import {
   SafeAreaView,
   ImageSourcePropType,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
 import MainHeader from "../../components/mainHeader";
@@ -20,16 +20,86 @@ import { useAppStore } from "stores/useAppStore";
 import { useProductStore } from "stores/useProductStore";
 import { useCategoriesStore } from "stores/useCategoryStore";
 import { useBrandStore } from "stores/useBrandStore";
-import { getAllProducts } from "apis/product.api";
+import {
+  getAllProducts,
+  getFilteredProduct,
+  searchProductsByName,
+} from "apis/product.api";
 import { getAllCategories } from "apis/category.api";
 import { getAllBrands } from "apis/brand.api";
 import { IProduct } from "interfaces/IProduct";
-
-type Category = {
-  label: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  activeIcon: keyof typeof Ionicons.glyphMap;
-};
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { PanGestureHandler } from "react-native-gesture-handler";
+import Colors from "constants/Colors";
+export const categories = [
+  {
+    label: "All",
+    icon: "menu",
+    idnumber: 0,
+  },
+  {
+    label: "Dog Food",
+    icon: "dog",
+    idnumber: 1,
+  },
+  {
+    label: "Cat Food",
+    icon: "cat",
+    idnumber: 2,
+  },
+  {
+    label: "Bird Suplies",
+    icon: "bird",
+    idnumber: 3,
+  },
+  {
+    label: "Fish & Aquatic",
+    icon: "fishbowl-outline",
+    idnumber: 4,
+  },
+  {
+    // need edit later
+    label: "Small Pet",
+    icon: "cheese",
+    idnumber: 5,
+  },
+  {
+    // need edit later
+    label: "Reptile",
+    icon: "ab-testing",
+    idnumber: 6,
+  },
+  {
+    label: "Toys",
+    icon: "toy-brick",
+    idnumber: 7,
+  },
+  {
+    label: "Grooming",
+    icon: "dog",
+    idnumber: 8,
+  },
+  {
+    label: "Furniture",
+    icon: "table-furniture",
+    idnumber: 9,
+  },
+  {
+    label: "Medincine",
+    icon: "pill",
+    idnumber: 10,
+  },
+  {
+    label: "Carriers",
+    icon: "bag-personal",
+    idnumber: 11,
+  },
+  {
+    label: "Collars",
+    icon: "dog-service",
+    idnumber: 12,
+  },
+];
 
 // const categories: Category[] = [
 //   { label: "Popular", icon: "star-outline", activeIcon: "star" },
@@ -40,65 +110,34 @@ type Category = {
 //   { label: "Large", icon: "pricetags-outline", activeIcon: "pricetags" },
 // ];
 
-type Pet = {
-  id: string;
-  name: string;
-  price: string;
-  image: ImageSourcePropType;
-};
-
-const pets: Pet[] = [
-  {
-    id: "1",
-    name: "Alaskan Malamute Grey",
-    price: "$ 12.00",
-    image: require("../../assets/dog1.png"),
-  },
-  {
-    id: "2",
-    name: "Poodle Tiny Dairy Cow",
-    price: "$ 25.00",
-    image: require("../../assets/dog2.png"),
-  },
-  {
-    id: "3",
-    name: "Pomeranian White",
-    price: "$ 20.00",
-    image: require("../../assets/dog3.png"),
-  },
-  {
-    id: "4",
-    name: "Pomeranian White",
-    price: "$ 50.00",
-    image: require("../../assets/dog4.png"),
-  },
-];
-
 export default function Homepage() {
   const [selectedCategoryIndex, setSelectedCategoryIndex] = useState<number>(0);
   const isLoading = useAppStore((state) => state.isLoading);
   const setIsLoading = useAppStore((state) => state.setIsLoading);
-  const products = useProductStore((state) => state.products);
-  const filteredProducts = useProductStore((state) => state.filteredProducts);
+
   const setFilteredProducts = useProductStore(
     (state) => state.setFilteredProducts
   );
   const setProducts = useProductStore((state) => state.setProducts);
   const setSortBy = useProductStore((state) => state.setSortBy);
   const setCategories = useCategoriesStore((state) => state.setCategories);
+
+  // const categories = useCategoriesStore((state) => state.setCategories);
+  const filteredProducts = useProductStore((state) => state.filteredProducts);
+  const products = useProductStore((state) => state.products);
   const setBrands = useBrandStore((state) => state.setBrands);
+  const [searchValue, setSearchValue] = useState<string>("");
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
         console.log("Fetching products...");
-        // const { data: productData } = await getAllProducts();
-        const categoryData = await getAllCategories();
-        // const { data: brandData } = await getAllBrands();
-
-        // console.log("Fetched products:", productData);
-        // setProducts(productData);
-        setCategories(categoryData);
+        const productData = await getAllProducts();
+        // const categoryData = await getAllCategories();
+        // const brandData = await getAllBrands();
+        setProducts(productData.data);
+        console.log("Products: \n", products);
+        // setCategories(categoryData);
         // setBrands(brandData);
       } catch (error) {
         console.error("Fetch error:", error);
@@ -109,55 +148,101 @@ export default function Homepage() {
 
     fetchData();
   }, []);
+  ///search
+  const handleSearchProduct = async () => {
+    setIsLoading(true);
+    try {
+      if (searchValue && searchValue !== "") {
+        const { data } = await searchProductsByName(searchValue);
+        setProducts(data);
+      } else {
+        const { data } = await getAllProducts();
+        setProducts(data);
+      }
+      setIsLoading(false);
+    } catch (error) {
+      setIsLoading(false);
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  //filter by category
+  const handleFilterProduct = async (categoryId: number, index: number) => {
+    setSelectedCategoryIndex(index);
+    setIsLoading(true);
+    try {
+      let filtered;
+      if (categoryId != 0) filtered = await getFilteredProduct(categoryId);
+      else filtered = await getAllProducts();
+      setProducts(filtered.data);
+    } catch (error) {
+      setIsLoading(false);
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   const router = useRouter();
 
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <MainHeader title="Pets" />
+      <MainHeader title="Products" />
+      {/* <View style={{ height: 50 }}>
+        <TextInput>
+          size="large" prefix={<MaterialIcons name="search" />}
+          placeholder="Search..." value={searchValue}
+          {/* onChange={(e) => setSearchValue(e.target.value.toString)} *
+        </TextInput>
+      </View> */}
+      <View style={{ height: 120 }}>
+        {/*Search box  */}
 
-      {/* Categories */}
-      {/* <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.categoriesContainer}
-      >
-        {categories.map((item, index) => {
-          const isActive = index === selectedCategoryIndex;
-          return (
-            <TouchableOpacity
-              key={index}
-              style={[styles.categoryItem]}
-              onPress={() => setSelectedCategoryIndex(index)}
-            >
-              <View
-                style={[
-                  styles.iconWrapper,
-                  isActive && styles.activeIconWrapper,
-                ]}
+        {/* Categories */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={true}
+          contentContainerStyle={styles.categoriesContainer}
+          scrollEnabled={true}
+        >
+          {categories.map((item, index) => {
+            const isActive = index === selectedCategoryIndex;
+            return (
+              <TouchableOpacity
+                key={index}
+                style={[styles.categoryItem]}
+                onPress={() => handleFilterProduct(item.idnumber, index)}
               >
-                <Ionicons
-                  name={isActive ? item.activeIcon : item.icon}
-                  size={28}
-                  color={isActive ? "#000" : "#555"}
-                />
-              </View>
-              <Text
-                style={[styles.categoryLabel, isActive && styles.activeLabel]}
-              >
-                {item.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView> */}
-
+                <View
+                  style={[
+                    styles.iconWrapper,
+                    isActive && styles.activeIconWrapper,
+                  ]}
+                >
+                  <MaterialCommunityIcons
+                    name={item.icon as any}
+                    size={28}
+                    color={isActive ? "#000" : "#555"}
+                  />
+                </View>
+                <Text
+                  style={[styles.categoryLabel, isActive && styles.activeLabel]}
+                >
+                  {item.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
       {/* Pet Grid */}
       <FlatList
-        data={pets}
+        data={products}
         keyExtractor={(item) => item.id.toString()}
         numColumns={2}
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 80 }}
         columnWrapperStyle={{
           justifyContent: "space-between",
@@ -166,8 +251,7 @@ export default function Homepage() {
         renderItem={({ item }) => (
           <View style={styles.card}>
             <View>
-              {/* {{ uri: item.images[0] } */}
-              <Image source={item.image} style={styles.image} />
+              <Image source={{ uri: item.images[0] }} style={styles.image} />
               <TouchableOpacity
                 onPress={() =>
                   router.push({
@@ -184,6 +268,7 @@ export default function Homepage() {
             <Text style={styles.petPrice}>${item.price}</Text>
           </View>
         )}
+        style={{ flex: 1 }}
       />
     </SafeAreaView>
   );
@@ -198,10 +283,20 @@ const styles = StyleSheet.create({
   categoriesContainer: {
     paddingHorizontal: 16,
     paddingVertical: 16,
+    flexDirection: "row",
+  },
+  // scrollContainer: {
+  //   // Enable touch-action for horizontal pan dragging on web
+  //   touchAction: "pan-x",
+  //   cursor: "grab" as any,
+  // },
+  mainheader: {
+    backgroundColor: "red",
   },
   categoryItem: {
     alignItems: "center",
     marginRight: 16,
+    minWidth: 80,
   },
   iconWrapper: {
     backgroundColor: "#f1f1f1",

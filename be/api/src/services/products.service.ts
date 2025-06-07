@@ -35,6 +35,21 @@ export class ProductService {
 
     return products;
   }
+
+  //get products by categoryid
+  public async findProductsByCategory(categoryid: number): Promise<Product[]> {
+    const products: Product[] = await DB.Product.findAll({
+      where: {
+        categoryId: categoryid,
+      },
+    });
+    if (products.length === 0) {
+      throw new HttpException(404, 'No products found');
+    }
+
+    return products;
+  }
+
   //get 10 products:
   public async findFirstTenProducts(): Promise<Product[]> {
     const products: Product[] = await DB.Product.findAll({
