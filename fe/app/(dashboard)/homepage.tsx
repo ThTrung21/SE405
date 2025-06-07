@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+"use client";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -10,11 +11,19 @@ import {
   TouchableOpacity,
   SafeAreaView,
   ImageSourcePropType,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
-import MainHeader from '../../components/mainHeader';
+import MainHeader from "../../components/mainHeader";
+import { useAppStore } from "stores/useAppStore";
+import { useProductStore } from "stores/useProductStore";
+import { useCategoriesStore } from "stores/useCategoryStore";
+import { useBrandStore } from "stores/useBrandStore";
+import { getAllProducts } from "apis/product.api";
+import { getAllCategories } from "apis/category.api";
+import { getAllBrands } from "apis/brand.api";
+import { IProduct } from "interfaces/IProduct";
 
 type Category = {
   label: string;
@@ -22,14 +31,14 @@ type Category = {
   activeIcon: keyof typeof Ionicons.glyphMap;
 };
 
-const categories: Category[] = [
-  { label: 'Popular', icon: 'star-outline', activeIcon: 'star' },
-  { label: 'Pets', icon: 'paw-outline', activeIcon: 'paw' },
-  { label: 'Proteine', icon: 'restaurant-outline', activeIcon: 'restaurant' },
-  { label: 'Biscuit', icon: 'pizza-outline', activeIcon: 'pizza' },
-  { label: 'Small', icon: 'pricetag-outline', activeIcon: 'pricetag' },
-  { label: 'Large', icon: 'pricetags-outline', activeIcon: 'pricetags' },
-];
+// const categories: Category[] = [
+//   { label: "Popular", icon: "star-outline", activeIcon: "star" },
+//   { label: "Pets", icon: "paw-outline", activeIcon: "paw" },
+//   { label: "Proteine", icon: "restaurant-outline", activeIcon: "restaurant" },
+//   { label: "Biscuit", icon: "pizza-outline", activeIcon: "pizza" },
+//   { label: "Small", icon: "pricetag-outline", activeIcon: "pricetag" },
+//   { label: "Large", icon: "pricetags-outline", activeIcon: "pricetags" },
+// ];
 
 type Pet = {
   id: string;
@@ -40,33 +49,66 @@ type Pet = {
 
 const pets: Pet[] = [
   {
-    id: '1',
-    name: 'Alaskan Malamute Grey',
-    price: '$ 12.00',
-    image: require('../../assets/dog1.png'),
+    id: "1",
+    name: "Alaskan Malamute Grey",
+    price: "$ 12.00",
+    image: require("../../assets/dog1.png"),
   },
   {
-    id: '2',
-    name: 'Poodle Tiny Dairy Cow',
-    price: '$ 25.00',
-    image: require('../../assets/dog2.png'),
+    id: "2",
+    name: "Poodle Tiny Dairy Cow",
+    price: "$ 25.00",
+    image: require("../../assets/dog2.png"),
   },
   {
-    id: '3',
-    name: 'Pomeranian White',
-    price: '$ 20.00',
-    image: require('../../assets/dog3.png'),
+    id: "3",
+    name: "Pomeranian White",
+    price: "$ 20.00",
+    image: require("../../assets/dog3.png"),
   },
   {
-    id: '4',
-    name: 'Pomeranian White',
-    price: '$ 50.00',
-    image: require('../../assets/dog4.png'),
+    id: "4",
+    name: "Pomeranian White",
+    price: "$ 50.00",
+    image: require("../../assets/dog4.png"),
   },
 ];
 
 export default function Homepage() {
   const [selectedCategoryIndex, setSelectedCategoryIndex] = useState<number>(0);
+  const isLoading = useAppStore((state) => state.isLoading);
+  const setIsLoading = useAppStore((state) => state.setIsLoading);
+  const products = useProductStore((state) => state.products);
+  const filteredProducts = useProductStore((state) => state.filteredProducts);
+  const setFilteredProducts = useProductStore(
+    (state) => state.setFilteredProducts
+  );
+  const setProducts = useProductStore((state) => state.setProducts);
+  const setSortBy = useProductStore((state) => state.setSortBy);
+  const setCategories = useCategoriesStore((state) => state.setCategories);
+  const setBrands = useBrandStore((state) => state.setBrands);
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        console.log("Fetching products...");
+        // const { data: productData } = await getAllProducts();
+        const categoryData = await getAllCategories();
+        // const { data: brandData } = await getAllBrands();
+
+        // console.log("Fetched products:", productData);
+        // setProducts(productData);
+        setCategories(categoryData);
+        // setBrands(brandData);
+      } catch (error) {
+        console.error("Fetch error:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const router = useRouter();
 
@@ -76,7 +118,7 @@ export default function Homepage() {
       <MainHeader title="Pets" />
 
       {/* Categories */}
-      <ScrollView
+      {/* <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.categoriesContainer}
@@ -89,39 +131,57 @@ export default function Homepage() {
               style={[styles.categoryItem]}
               onPress={() => setSelectedCategoryIndex(index)}
             >
-              <View style={[styles.iconWrapper, isActive && styles.activeIconWrapper]}>
+              <View
+                style={[
+                  styles.iconWrapper,
+                  isActive && styles.activeIconWrapper,
+                ]}
+              >
                 <Ionicons
                   name={isActive ? item.activeIcon : item.icon}
                   size={28}
-                  color={isActive ? '#000' : '#555'}
+                  color={isActive ? "#000" : "#555"}
                 />
               </View>
-              <Text style={[styles.categoryLabel, isActive && styles.activeLabel]}>{item.label}</Text>
+              <Text
+                style={[styles.categoryLabel, isActive && styles.activeLabel]}
+              >
+                {item.label}
+              </Text>
             </TouchableOpacity>
           );
         })}
-      </ScrollView>
+      </ScrollView> */}
 
       {/* Pet Grid */}
       <FlatList
         data={pets}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id.toString()}
         numColumns={2}
         contentContainerStyle={{ paddingBottom: 80 }}
-        columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 16 }}
+        columnWrapperStyle={{
+          justifyContent: "space-between",
+          paddingHorizontal: 16,
+        }}
         renderItem={({ item }) => (
           <View style={styles.card}>
             <View>
+              {/* {{ uri: item.images[0] } */}
               <Image source={item.image} style={styles.image} />
               <TouchableOpacity
-                onPress={() => router.push({ pathname: '/(stack)/item', params: { id: item.id } })}
+                onPress={() =>
+                  router.push({
+                    pathname: "/(stack)/item",
+                    params: { id: item.id },
+                  })
+                }
                 style={styles.cartButton}
               >
                 <Ionicons name="bag-handle" size={20} color="#fff" />
               </TouchableOpacity>
             </View>
             <Text style={styles.petName}>{item.name}</Text>
-            <Text style={styles.petPrice}>{item.price}</Text>
+            <Text style={styles.petPrice}>${item.price}</Text>
           </View>
         )}
       />
@@ -132,67 +192,67 @@ export default function Homepage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    paddingVertical: 24
+    backgroundColor: "#fff",
+    paddingVertical: 24,
   },
   categoriesContainer: {
     paddingHorizontal: 16,
     paddingVertical: 16,
   },
   categoryItem: {
-    alignItems: 'center',
+    alignItems: "center",
     marginRight: 16,
   },
   iconWrapper: {
-    backgroundColor: '#f1f1f1',
+    backgroundColor: "#f1f1f1",
     padding: 12,
     borderRadius: 14,
     marginBottom: 6,
   },
   activeIconWrapper: {
-    backgroundColor: '#FAD69C', // light yellow
+    backgroundColor: "#FAD69C", // light yellow
   },
   categoryLabel: {
     fontSize: 12,
-    color: '#888',
-    fontWeight: '500',
+    color: "#888",
+    fontWeight: "500",
   },
   activeLabel: {
-    color: '#000',
-    fontWeight: 'bold',
+    color: "#000",
+    fontWeight: "bold",
   },
   card: {
-    width: '48%',
-    backgroundColor: '#fff',
+    width: "48%",
+    backgroundColor: "#fff",
     borderRadius: 10,
     marginBottom: 20,
-    overflow: 'hidden',
-    position: 'relative',
+    overflow: "hidden",
+    position: "relative",
   },
   image: {
-    width: '100%',
+    width: "100%",
     height: 200,
     borderTopLeftRadius: 10,
     borderTopRightRadius: 10,
   },
   petName: {
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: "500",
     paddingHorizontal: 8,
     marginTop: 6,
   },
   petPrice: {
     fontSize: 13,
-    fontWeight: '600',
-    color: '#003366',
+    fontWeight: "600",
+    color: "#003366",
     paddingHorizontal: 8,
     marginBottom: 8,
   },
   cartButton: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 8,
     right: 8,
-    backgroundColor: '#808080',
+    backgroundColor: "#808080",
     borderRadius: 6,
     padding: 6,
     opacity: 0.6,

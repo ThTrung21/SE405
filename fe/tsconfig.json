@@ -3,10 +3,7 @@
     "target": "esnext",
     "module": "esnext",
     "jsx": "react-native",
-    "lib": [
-      "esnext",
-      "dom"
-    ],
+    "lib": ["esnext", "dom"],
     "allowJs": true,
     "skipLibCheck": true,
     "noEmit": true,
@@ -17,25 +14,16 @@
     "strict": true,
     "baseUrl": ".",
     "paths": {
-      "@components/*": [
-        "src/components/*"
-      ],
-      "@screens/*": [
-        "src/screens/*"
-      ]
+      "@components/*": ["src/components/*"],
+      "@screens/*": ["src/screens/*"]
     }
   },
   "exclude": [
     "node_modules",
     "babel.config.js",
-    "metro.config.js",
+    "metro.config.cjs",
     "jest.config.js"
   ],
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "declarations.d.ts",
-    "src/**/*"
-  ],
+  "include": ["**/*.ts", "**/*.tsx", "declarations.d.ts", "src/**/*"],
   "extends": "expo/tsconfig.base"
 }
