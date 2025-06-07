@@ -8,25 +8,25 @@ class HttpRequest {
     this.api = axiosInstance;
   }
 
-  async get(url: string, config?: IConfig) {
+  async get<T = any>(url: string, config?: IConfig): Promise<T> {
     return this.api.get(url, config);
   }
 
-  async post(url: string, data: any, config?: IConfig) {
+  async post<T = any>(url: string, data: any, config?: IConfig): Promise<T> {
     return this.api.post(url, data, config);
   }
 
-  async put(url: string, data: any, config?: IConfig) {
+  async put<T = any>(url: string, data: any, config?: IConfig): Promise<T> {
     return this.api.put(url, data, config);
   }
 
-  async patch(url: string, data?: any, config?: IConfig) {
+  async patch<T = any>(url: string, data?: any, config?: IConfig): Promise<T> {
     return this.api.patch(url, data, config);
   }
-  async put2(url: string, config?: IConfig) {
+  async put2<T = any>(url: string, config?: IConfig): Promise<T> {
     return this.api.put(url, config);
   }
-  async delete(url: string, config?: IConfig) {
+  async delete<T = any>(url: string, config?: IConfig): Promise<T> {
     return this.api.delete(url, config);
   }
 }
