@@ -1,6 +1,6 @@
-import { useAppStore } from "@/stores/useAppStore";
-import { useAuthStore } from "@/stores/useAuthStore";
-import { useCartStore } from "@/stores/useCartStore";
+import { useAppStore } from "../stores/useAppStore";
+import { useAuthStore } from "../stores/useAuthStore";
+import { useCartStore } from "../stores/useCartStore";
 import axios from "axios";
 
 export const logOut = () => {
