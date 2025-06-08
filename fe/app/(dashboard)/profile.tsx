@@ -64,30 +64,20 @@ export default function ProfileScreen() {
         alert("Permission to access media library is required!");
       }
     })();
-    // if (rehydrated && (!loggedIn || !profile)) {
-    //   router.replace("/(auth)/login");
-    // }
-    // if (!rehydrated) {
-    //   // Auth state is still being rehydrated
-    //   return;
-    // }
-
-    if (!loggedIn) {
-      router.push("/(auth)/login");
-    }
-    if (!profile) {
-      router.replace("/(auth)/login"); // `replace` prevents going back
+    if (!rehydrated) {
+      // Auth state is still being rehydrated
       return;
     }
+
     if (profile) {
-      setEditAddress(profile.address || "");
-      setEditPhone(profile.phone || "");
-      setEditName(profile.fullname || "");
-      setEditEmail(profile.email || "");
-      setRole(profile.role);
-      setCurrentPassword(profile.password || "");
+      setEditAddress(profile?.address || "");
+      setEditPhone(profile?.phone || "");
+      setEditName(profile?.fullname || "");
+      setEditEmail(profile?.email || "");
+      setRole(profile?.role);
+      setCurrentPassword(profile?.password || "");
     }
-  }, [loggedIn, rehydrated, profile]);
+  }, [rehydrated]);
   // if (!rehydrated) {
   //   return null; // or a loading spinner
   // }
@@ -163,10 +153,10 @@ export default function ProfileScreen() {
   const handleupdateprofile = async () => {
     setIsLoading(true);
     let payload = {};
-    if (editName !== profile!.fullname) payload = { ...payload, editName };
-    if (editAddress !== profile!.address) payload = { ...payload, editAddress };
-    if (editPhone !== profile!.phone) payload = { ...payload, editPhone };
-    if (editEmail !== profile!.email) payload = { ...payload, editEmail };
+    if (editName !== profile?.fullname) payload = { ...payload, editName };
+    if (editAddress !== profile?.address) payload = { ...payload, editAddress };
+    if (editPhone !== profile?.phone) payload = { ...payload, editPhone };
+    if (editEmail !== profile?.email) payload = { ...payload, editEmail };
     if (avatarUriToUpload) {
       const blob = await uriToBlob(avatarUriToUpload);
       const filename = avatarUriToUpload.split("/").pop(); // you can make this more unique if needed
@@ -225,8 +215,8 @@ export default function ProfileScreen() {
                 <MaterialIcons name="edit" size={20} color="#fff" />
               </View>
             </TouchableOpacity>
-            <Text style={styles.avatarName}>{profile!.fullname}</Text>
-            <Text style={styles.avatarEmail}>{profile!.email}</Text>
+            <Text style={styles.avatarName}>{profile?.fullname}</Text>
+            <Text style={styles.avatarEmail}>{profile?.email}</Text>
           </View>
           {isStaff ? (
             <View style={styles.manageCard}>
