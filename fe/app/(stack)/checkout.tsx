@@ -54,11 +54,12 @@ export default function CheckoutScreen() {
       // Auth state is still being rehydrated
       return;
     }
-    if (loggedIn) {
+    if (!loggedIn) {
       // if (!loggedIn) {
-      router.push("/auth/login");
+      router.push("/(auth)/login");
       return;
     }
+    console.log(userProfile);
     //set default value for delivery info as user's info
     if (userProfile) {
       setAddress(userProfile.address || "");

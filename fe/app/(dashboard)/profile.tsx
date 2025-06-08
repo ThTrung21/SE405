@@ -1,143 +1,367 @@
 "use client";
-import React, { useEffect } from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  SafeAreaView,
+  Modal,
+  ScrollView,
+  TextInput,
+} from "react-native";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import ProfileHeader from "../../components/profileHeader";
 import { useRouter } from "expo-router";
 import { useAuthStore } from "stores/useAuthStore";
-
+import Header from "components/header";
+import { useAppStore } from "stores/useAppStore";
+import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
+import { app } from "utils/firebase";
+import { changeUserPassword, updateUserProfile } from "apis/user.api";
+import Toast from "react-native-toast-message";
+import { executeMutation } from "firebase/data-connect";
+const defaultAvatar = require("../../assets/avatar-default.png");
+const uriToBlob = async (uri: string): Promise<Blob> => {
+  const response = await fetch(uri);
+  const blob = await response.blob();
+  return blob;
+};
 export default function ProfileScreen() {
+  const [avatarUriToUpload, setAvatarUriToUpload] = useState<string | null>(
+    null
+  ); // for upload on save
   const router = useRouter();
-
-  const userProfile = useAuthStore((state) => state.profile);
+  const profile = useAuthStore((state) => state.profile);
+  const [avatar, setAvatar] = useState<string | null>(null);
+  const [editModal, setEditModal] = useState(false);
+  const [passwordModal, setPasswordModal] = useState(false);
   const loggedIn = useAuthStore((state) => state.loggedIn);
   const rehydrated = useAuthStore((state) => state.rehydrated);
+  const isLoading = useAppStore((state) => state.isLoading);
+  const setIsLoading = useAppStore((state) => state.setIsLoading);
+
+  const setProfile = useAuthStore((state) => state.setProfile);
+
+  // edit info
+  const [editName, setEditName] = useState("");
+  const [editAddress, setEditAddress] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+
+  const [currentPasswordInput, setCurrentPasswordInput] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   useEffect(() => {
-    // if (!rehydrated) {
-    //   // Auth state is still being rehydrated
-    //   return;
-    // }
-    // if (!loggedIn) {
-    //   router.push("/(auth)/login");
-    // }
+    (async () => {
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        alert("Permission to access media library is required!");
+      }
+    })();
+    if (!rehydrated) {
+      // Auth state is still being rehydrated
+      return;
+    }
+    console.log(profile?.avatar);
+    if (!loggedIn) {
+      router.push("/(auth)/login");
+    }
+    if (profile) {
+      setEditAddress(profile.address || "");
+      setEditPhone(profile.phone || "");
+      setEditName(profile.fullname || "");
+      setEditEmail(profile.email || "");
+      setCurrentPassword(profile.password || "");
+    }
   }, [loggedIn, rehydrated]);
-  const userId = Number(userProfile?.id);
+  const pickAvatar = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!result.canceled && result.assets?.length > 0) {
+      const uri = result.assets[0].uri;
+      setAvatar(uri); // show preview
+      setAvatarUriToUpload(uri); // store for later upload
+    }
+  };
+  const handleChangePassword = async () => {
+    setIsLoading(true);
+    if (newPassword.length < 8) {
+      Toast.show({
+        type: "error",
+        text1: "New password is <8 characters",
+        visibilityTime: 2000,
+      });
+      setIsLoading(false);
+      setPasswordModal(false);
+      return;
+    }
+    if (currentPassword !== currentPasswordInput) {
+      Toast.show({
+        type: "error",
+        text1: "Wrong Password",
+        visibilityTime: 2000,
+      });
+      setIsLoading(false);
+      setPasswordModal(false);
+      return;
+    }
+    if (confirmPassword !== newPassword) {
+      Toast.show({
+        type: "error",
+        text1: "Passwords mismatch",
+        visibilityTime: 2000,
+      });
+      setIsLoading(false);
+      setPasswordModal(false);
+      return;
+    }
+    try {
+      await changeUserPassword({ currentPassword, newPassword });
+      setIsLoading(false);
+      Toast.show({
+        type: "success",
+        text1: "Password Changed",
+        visibilityTime: 2000,
+      });
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1: "Something went wrong",
+        visibilityTime: 2000,
+      });
+    }
+  };
+  const handleupdateprofile = async () => {
+    setIsLoading(true);
+    let payload = {};
+    if (editName !== profile!.fullname) payload = { ...payload, editName };
+    if (editAddress !== profile!.address) payload = { ...payload, editAddress };
+    if (editPhone !== profile!.phone) payload = { ...payload, editPhone };
+    if (editEmail !== profile!.email) payload = { ...payload, editEmail };
+    if (avatarUriToUpload) {
+      const blob = await uriToBlob(avatarUriToUpload);
+      const filename = avatarUriToUpload.split("/").pop(); // you can make this more unique if needed
+      const storage = getStorage(app);
+      const storageRef = ref(storage, `petshop/avatars/${filename}`);
+
+      await uploadBytes(storageRef, blob);
+      const downloadURL = await getDownloadURL(storageRef);
+
+      payload = { ...payload, avatar: downloadURL }; // add to final payload
+    }
+    try {
+      const { data } = await updateUserProfile(payload);
+      setProfile(data);
+      setIsLoading(false);
+      Toast.show({
+        type: "success",
+        text1: "Profile updated",
+        visibilityTime: 1000,
+      });
+      setEditModal(false);
+    } catch (error: any) {
+      console.log(error);
+      Toast.show({
+        type: "error",
+        text1: "Something went wrong",
+        visibilityTime: 2000,
+      });
+      setIsLoading(false);
+    }
+  };
   const onOrdersPress = () => {
     router.push("/orders");
   };
-  const onAddressesPress = () => {
-    router.push({
-      pathname: "/addresses",
-      // params: { id: userId },
-    });
-  };
-  // const onPaymentPress = () => {
-  //   router.push('/payment');
-  // };
-  const onMyReviewsPress = () => {
-    router.push("/myReviews");
-  };
-  const onSettingsPress = () => {
-    router.push("/settings");
-  };
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <ProfileHeader title="Profile" />
+    <SafeAreaView style={styles.container}>
+      <ScrollView>
+        {/* Header */}
+        <ProfileHeader title="Settings" />
+        <View style={styles.content}>
+          <View style={styles.section}>
+            {/* <Text style={styles.sectionTitle}>Personal Information</Text> */}
+            <TouchableOpacity
+              style={styles.avatarWrapper}
+              onPress={() => setEditModal(true)}
+            >
+              <Image
+                source={
+                  profile?.avatar ? { uri: profile?.avatar } : defaultAvatar
+                }
+                style={styles.avatar}
+              />
+              <View style={styles.avatarEditIcon}>
+                <MaterialIcons name="edit" size={20} color="#fff" />
+              </View>
+            </TouchableOpacity>
+            <Text style={styles.avatarName}>{profile!.fullname}</Text>
+            <Text style={styles.avatarEmail}>{profile!.email}</Text>
+          </View>
+          <View style={styles.card}>
+            <TouchableOpacity
+              style={styles.cardItem}
+              onPress={onOrdersPress}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.cardTitle}>My orders</Text>
+              <Text style={styles.cardSubtitle}>Already have 10 orders</Text>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color="#ccc"
+                style={styles.chevron}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.cardItem}
+              onPress={() => setPasswordModal(true)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.cardTitle}>Change Password</Text>
 
-      <View style={styles.content}>
-        <View style={styles.profileInfo}>
-          <Image
-            source={require("../../assets/default_avatar.jpg")}
-            style={styles.avatar}
-          />
-          <View>
-            <Text style={styles.name}>Bruno Pham</Text>
-            <Text style={styles.email}>bruno203@gmail.com</Text>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color="#ccc"
+                style={styles.chevron}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.cardItem}
+              onPress={() => {}}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.cardTitle}>FAQ</Text>
+
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color="#ccc"
+                style={styles.chevron}
+              />
+            </TouchableOpacity>
           </View>
         </View>
-
-        <View style={styles.card}>
-          <TouchableOpacity
-            style={styles.cardItem}
-            onPress={onOrdersPress}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.cardTitle}>My orders</Text>
-            <Text style={styles.cardSubtitle}>Already have 10 orders</Text>
-            <Ionicons
-              name="chevron-forward"
-              size={20}
-              color="#ccc"
-              style={styles.chevron}
+      </ScrollView>
+      {/* Modal for editing personal info and avatar */}
+      <Modal visible={editModal} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalTitle}>Edit Personal Information</Text>
+            <TouchableOpacity style={styles.avatarWrapper} onPress={pickAvatar}>
+              <Image
+                source={avatar ? { uri: avatar } : defaultAvatar}
+                style={styles.avatar}
+              />
+              <View style={styles.avatarEditIcon}>
+                <Ionicons name="camera" size={20} color="#fff" />
+              </View>
+            </TouchableOpacity>
+            <TextInput
+              style={styles.input}
+              placeholder="Full Name"
+              placeholderTextColor="#999"
+              value={editName}
+              onChangeText={setEditName}
             />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.cardItem}
-            onPress={onAddressesPress}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.cardTitle}>Addresses</Text>
-            <Text style={styles.cardSubtitle}>Default Delivery Addresses</Text>
-            <Ionicons
-              name="chevron-forward"
-              size={20}
-              color="#ccc"
-              style={styles.chevron}
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              placeholderTextColor="#999"
+              value={editEmail}
+              onChangeText={setEditEmail}
+              keyboardType="email-address"
             />
-          </TouchableOpacity>
-
-          {/* <TouchableOpacity
-            style={styles.cardItem}
-            onPress={onPaymentPress}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.cardTitle}>Payment Method</Text>
-            <Text style={styles.cardSubtitle}>You have 2 cards</Text>
-            <Ionicons
-              name="chevron-forward"
-              size={20}
-              color="#ccc"
-              style={styles.chevron}
+            <TextInput
+              style={styles.input}
+              placeholder="Phone Number"
+              placeholderTextColor="#999"
+              value={editPhone}
+              onChangeText={setEditPhone}
+              keyboardType="phone-pad"
             />
-          </TouchableOpacity> */}
-
-          <TouchableOpacity
-            style={styles.cardItem}
-            onPress={onMyReviewsPress}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.cardTitle}>My reviews</Text>
-            <Text style={styles.cardSubtitle}>Reviews for 5 items</Text>
-            <Ionicons
-              name="chevron-forward"
-              size={20}
-              color="#ccc"
-              style={styles.chevron}
+            <TextInput
+              style={styles.input}
+              placeholder="Address"
+              placeholderTextColor="#999"
+              value={editAddress}
+              onChangeText={setEditAddress}
             />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.cardItem}
-            onPress={onSettingsPress}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.cardTitle}>Settings</Text>
-            <Text style={styles.cardSubtitle}>
-              Notification, Password, FAQ, Contact
-            </Text>
-            <Ionicons
-              name="chevron-forward"
-              size={20}
-              color="#ccc"
-              style={styles.chevron}
-            />
-          </TouchableOpacity>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "flex-end",
+                marginTop: 16,
+              }}
+            >
+              <TouchableOpacity
+                onPress={() => setEditModal(false)}
+                style={styles.cancelBtn}
+              >
+                <Text
+                  style={{ color: "#003459", fontWeight: "bold", fontSize: 16 }}
+                >
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleupdateprofile}
+                style={styles.saveBtn}
+              >
+                <Text
+                  style={{ color: "#fff", fontWeight: "bold", fontSize: 16 }}
+                >
+                  Save
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
-      </View>
-    </View>
+      </Modal>
+      <Modal visible={passwordModal} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Change Password</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Current password"
+              value={currentPasswordInput}
+              onChangeText={setCurrentPasswordInput}
+            />
+            <TextInput
+              style={styles.modalInput}
+              placeholder="New Password"
+              value={newPassword}
+              onChangeText={setNewPassword}
+            />
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Confirm new Password"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              keyboardType="phone-pad"
+            />
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={handleChangePassword}
+            >
+              <Text style={styles.modalButtonText}>Update</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </SafeAreaView>
   );
 }
 
@@ -147,29 +371,145 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     paddingVertical: 24,
   },
-  content: {
-    padding: 16,
+  content: { padding: 16 },
+  header: {
+    fontSize: 26,
+    fontWeight: "bold",
+    marginBottom: 24,
+    textAlign: "center",
+    color: "#003459",
   },
-  profileInfo: {
-    flexDirection: "row",
+  section: {
+    marginBottom: 32,
     alignItems: "center",
-    paddingHorizontal: 10,
-    marginBottom: 20,
-    marginTop: 20,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 12,
+    alignItems: "center",
+    width: "100%",
+  },
+  sectionTitle: {
+    fontSize: 20,
+    color: "#003459",
+    fontWeight: "bold",
+    marginBottom: 12,
+    textAlign: "center",
+    width: "100%",
+  },
+  avatarWrapper: {
+    alignSelf: "center",
+    marginVertical: 12,
   },
   avatar: {
-    width: 75,
-    height: 75,
-    borderRadius: 40,
-    marginRight: 15,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 3,
+    borderColor: "#FAD69C",
+    backgroundColor: "#fff",
   },
-  name: {
-    fontSize: 18,
-    fontWeight: "500",
+  avatarEditIcon: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    backgroundColor: "#FAD69C",
+    borderRadius: 16,
+    padding: 4,
+    borderWidth: 2,
+    borderColor: "#fff",
   },
-  email: {
-    fontSize: 14,
+  avatarName: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#003459",
+    textAlign: "center",
+    marginTop: 8,
+  },
+  avatarEmail: {
+    fontSize: 16,
     color: "#888",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 14,
+    fontSize: 18,
+    marginBottom: 12,
+    borderColor: "#ddd",
+    borderWidth: 1,
+    width: 300,
+    alignSelf: "center",
+  },
+  switchRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    marginBottom: 10,
+    borderColor: "#ddd",
+    borderWidth: 1,
+    alignItems: "center",
+    width: 300,
+    alignSelf: "center",
+  },
+  switchLabel: {
+    fontSize: 18,
+  },
+  faq: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    borderColor: "#ddd",
+    borderWidth: 1,
+    alignItems: "center",
+    width: 300,
+    alignSelf: "center",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.3)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalBox: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 24,
+    width: 340,
+    maxWidth: "90%",
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#003459",
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  cancelBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 8,
+    backgroundColor: "#fff",
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: "#003459",
+  },
+  saveBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 8,
+    backgroundColor: "#003459",
+    marginLeft: 8,
   },
   card: {
     backgroundColor: "#fff",
@@ -196,5 +536,29 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 15,
     top: "40%",
+  },
+  modalContainer: {
+    width: "90%",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 20,
+  },
+
+  modalInput: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 12,
+  },
+  modalButton: {
+    backgroundColor: "#003459",
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  modalButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
   },
 });

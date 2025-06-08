@@ -20,10 +20,10 @@ const createToken = (user: User, exp: number, type: TokenType): TokenData => {
 export class AuthService {
   public async signup(userData: CreateUserDto): Promise<User> {
     const findUser: User = await DB.User.findOne({ where: { email: userData.email } });
-    if (findUser) throw new HttpException.HttpException(409, `This email ${userData.email} already exists`);
+    if (findUser) throw new HttpException(409, `This email ${userData.email} already exists`);
 
     const hashedPassword = await hash(userData.password, 10);
-    const createUserData: User = await DB.User.create({ ...userData, password: hashedPassword, status: Status.ACTIVE, role: Role.STAFF });
+    const createUserData: User = await DB.User.create({ ...userData, password: hashedPassword, status: Status.ACTIVE, role: Role.CUSTOMER });
 
     return createUserData;
   }

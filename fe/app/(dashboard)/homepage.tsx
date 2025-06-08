@@ -186,9 +186,9 @@ export default function Homepage() {
   };
   const router = useRouter();
 
-  const filteredPets = pets.filter(pet => 
-    pet.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // const filteredPets = pets.filter(pet =>
+  //   pet.name.toLowerCase().includes(searchQuery.toLowerCase())
+  // );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -304,32 +304,32 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
   },
   topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
     marginBottom: 12,
     minHeight: 40,
   },
   exploreTitle: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: '#003459',
-    textAlign: 'center',
+    fontWeight: "bold",
+    color: "#003459",
+    textAlign: "center",
     flex: 1,
-    fontFamily: 'System',
+    fontFamily: "System",
   },
   cartIcon: {
-    position: 'absolute',
+    position: "absolute",
     right: 24,
     top: 0,
     padding: 4,
     zIndex: 2,
   },
   searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
     borderRadius: 12,
     paddingHorizontal: 16,
     marginHorizontal: 16,
@@ -342,20 +342,20 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 18,
-    color: '#333',
-    fontWeight: '500',
-    fontFamily: 'System',
+    color: "#333",
+    fontWeight: "500",
+    fontFamily: "System",
   },
   bannerContainer: {
     marginHorizontal: 16,
     marginBottom: 8,
     borderRadius: 16,
-    overflow: 'hidden',
+    overflow: "hidden",
     elevation: 2,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   bannerImage: {
-    width: '100%',
+    width: "100%",
     height: 120,
     borderRadius: 16,
   },

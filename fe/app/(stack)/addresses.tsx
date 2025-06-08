@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import Header from "../../components/header";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAuthStore } from "stores/useAuthStore";
+import { updateUserProfile } from "apis/user.api";
 
 type Address = {
   id: number;
@@ -39,20 +40,37 @@ const ShippingAddressScreen: React.FC = () => {
   const [editAddress, setEditAddress] = useState(address);
   const [editPhone, setEditPhone] = useState(phone);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const setProfile = useAuthStore((state) => state.setProfile);
   const onAddPress = () => {
     setIsModalVisible(true);
   };
-  const handleUpdateDeliveryInfo = () => {
+  const handleUpdateDeliveryInfo = async () => {
+    setIsLoading(true);
     setName(editName);
     setAddress(editAddress);
     setPhone(editPhone);
     setIsModalVisible(false);
+    // const payload = {
+    //   address: address,
+
+    // }
+
+    try {
+      const { data } = await updateUserProfile(payload);
+      // setProfile(data);
+      setIsLoading(false);
+      router.push("/profile");
+    } catch {}
   };
-  if (userProfile) {
-    setAddress(userProfile.address || "");
-    setPhone(userProfile.phone || "");
-    setName(userProfile.fullname || "");
-  }
+  useEffect(() => {
+    if (userProfile) {
+      console.log(userProfile);
+      setAddress(userProfile.address || "");
+      setPhone(userProfile.phone || "");
+      setName(userProfile.fullname || "");
+    }
+  });
 
   return (
     <View style={styles.section}>
@@ -60,12 +78,6 @@ const ShippingAddressScreen: React.FC = () => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <Text style={styles.modalTitle}>Delivery Info</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Name"
-              value={editName}
-              onChangeText={setEditName}
-            />
             <TextInput
               style={styles.modalInput}
               placeholder="Address"

@@ -1,12 +1,17 @@
-import React from 'react';
-import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { TouchableOpacity, View, StyleSheet } from 'react-native';
-import { BottomTabBarButtonProps } from '@react-navigation/bottom-tabs';
+"use client";
+import React from "react";
+import { Tabs } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { TouchableOpacity, View, StyleSheet } from "react-native";
+import { BottomTabBarButtonProps } from "@react-navigation/bottom-tabs";
 
-function CustomTabBarButton({ children, onPress, accessibilityState }: BottomTabBarButtonProps) {
+function CustomTabBarButton({
+  children,
+  onPress,
+  accessibilityState,
+}: BottomTabBarButtonProps) {
   const isSelected = accessibilityState?.selected;
-
+  // const loggedIn =
   return (
     <TouchableOpacity
       style={styles.tabButtonWrapper}
@@ -30,17 +35,17 @@ export default function RootLayout() {
           height: 85,
           paddingBottom: 40,
           borderTopWidth: 0.5,
-          borderTopColor: '#ccc',
+          borderTopColor: "#ccc",
         },
         tabBarButton: (props) => <CustomTabBarButton {...props} />,
         // tabBarButton: (props: BottomTabBarButtonProps) => (
-          // <TouchableOpacity
-          //   {...props}
-          //   style={styles.tabButton}
-            // activeOpacity={0.7}
-          // >
-          //   {props.children}
-          // </TouchableOpacity>
+        // <TouchableOpacity
+        //   {...props}
+        //   style={styles.tabButton}
+        // activeOpacity={0.7}
+        // >
+        //   {props.children}
+        // </TouchableOpacity>
         // ),
       }}
     >
@@ -49,9 +54,9 @@ export default function RootLayout() {
         options={{
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
-              name={focused ? 'home' : 'home-outline'}
+              name={focused ? "home" : "home-outline"}
               size={24}
-              color={focused ? '#FAD69C' : '#888'}
+              color={focused ? "#FAD69C" : "#888"}
             />
           ),
         }}
@@ -61,9 +66,9 @@ export default function RootLayout() {
         options={{
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
-              name={focused ? 'bookmark' : 'bookmark-outline'}
+              name={focused ? "bookmark" : "bookmark-outline"}
               size={24}
-              color={focused ? '#FAD69C' : '#888'}
+              color={focused ? "#FAD69C" : "#888"}
             />
           ),
         }}
@@ -73,9 +78,9 @@ export default function RootLayout() {
         options={{
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
-              name={focused ? 'chatbubbles' : 'chatbubbles-outline'}
+              name={focused ? "chatbubbles" : "chatbubbles-outline"}
               size={24}
-              color={focused ? '#FAD69C' : '#888'}
+              color={focused ? "#FAD69C" : "#888"}
             />
           ),
         }}
@@ -85,9 +90,9 @@ export default function RootLayout() {
         options={{
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
-              name={focused ? 'notifications' : 'notifications-outline'}
+              name={focused ? "notifications" : "notifications-outline"}
               size={24}
-              color={focused ? '#FAD69C' : '#888'}
+              color={focused ? "#FAD69C" : "#888"}
             />
           ),
         }}
@@ -97,9 +102,9 @@ export default function RootLayout() {
         options={{
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
-              name={focused ? 'settings' : 'settings-outline'}
+              name={focused ? "settings" : "settings-outline"}
               size={24}
-              color={focused ? '#FAD69C' : '#888'}
+              color={focused ? "#FAD69C" : "#888"}
             />
           ),
         }}
@@ -109,9 +114,9 @@ export default function RootLayout() {
         options={{
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
-              name={focused ? 'person' : 'person-outline'}
+              name={focused ? "person" : "person-outline"}
               size={24}
-              color={focused ? '#FAD69C' : '#888'}
+              color={focused ? "#FAD69C" : "#888"}
             />
           ),
         }}
@@ -123,22 +128,22 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   tabButtonWrapper: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   iconWrapper: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   tabButton: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   activeTab: {
-    backgroundColor: '#FAD69C44', // soft orange highlight for active tab
+    backgroundColor: "#FAD69C44", // soft orange highlight for active tab
   },
 });

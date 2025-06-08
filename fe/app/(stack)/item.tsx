@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  FlatList,
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, Link, usePathname, router } from "expo-router";
@@ -25,7 +26,7 @@ import Toast from "react-native-toast-message";
 import MainHeader from "components/mainHeader";
 import SubHeader from "components/subheader";
 import { Bold } from "lucide-react-native";
-import { ImageSlider } from '../../components/ImageSlider';
+import { ImageSlider } from "../../components/ImageSlider";
 export default function Item() {
   const { id } = useLocalSearchParams(); // get id from route params
   const isLoading = useAppStore((state) => state.isLoading);
@@ -70,13 +71,13 @@ export default function Item() {
   if (!product) {
     return (
       <View style={styles.center}>
-        <Text>Pet not found.</Text>
+        <Text>Product not found.</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <View style={styles.container}>
       {/* Header */}
       <SubHeader title="Product Details" />
 
@@ -84,7 +85,7 @@ export default function Item() {
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
-        {/* Pet Image */}
+        {/*  Image */}
         <View style={{ width: "100%", alignItems: "center", marginBottom: 20 }}>
           <View style={styles.previewContainer}>
             {isLoading ? (
@@ -214,14 +215,6 @@ export default function Item() {
                   : "auto"
               }
             >
-              {/* Need Advice Button */}
-          <TouchableOpacity 
-            style={styles.adviceButton} 
-            onPress={() => router.push({ pathname: '/chat', params: { id: product.id } })}
-          >
-            <Ionicons name="chatbubble-outline" size={20} color="#FFA500" />
-            <Text style={styles.adviceButtonText}>Need advice?</Text>
-          </TouchableOpacity>
               <AppButton
                 title="Add to cart"
                 onPress={() => {
@@ -237,29 +230,7 @@ export default function Item() {
           )}
         </View>
       </View>
-
-      {/* Related Products Section */}
-      <View style={styles.relatedSection}>
-        <Text style={styles.relatedTitle}>Related Products</Text>
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={petData.filter(p => p.id !== pet.id)}
-          renderItem={({ item }) => (
-            <TouchableOpacity 
-              style={styles.relatedItem}
-              onPress={() => router.push({ pathname: '/item', params: { id: item.id } })}
-            >
-              <Image source={item.images[0]} style={styles.relatedImage} />
-              <Text style={styles.relatedName} numberOfLines={1}>{item.name}</Text>
-              <Text style={styles.relatedPrice}>${item.price}</Text>
-            </TouchableOpacity>
-          )}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.relatedList}
-        />
-      </View>
-    </ScrollView>
+    </View>
   );
 }
 
@@ -390,30 +361,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   adviceButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFA50022',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFA50022",
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
     gap: 8,
     marginBottom: 16,
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
   },
   adviceButtonText: {
-    color: '#FFA500',
-    fontWeight: '600',
+    color: "#FFA500",
+    fontWeight: "600",
     fontSize: 16,
   },
   relatedSection: {
     padding: 16,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     marginTop: 16,
   },
   relatedTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#003459',
+    fontWeight: "600",
+    color: "#003459",
     marginBottom: 12,
   },
   relatedList: {
@@ -422,27 +393,27 @@ const styles = StyleSheet.create({
   relatedItem: {
     width: 160,
     marginRight: 12,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 12,
     padding: 8,
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: "#eee",
   },
   relatedImage: {
-    width: '100%',
+    width: "100%",
     height: 120,
     borderRadius: 8,
     marginBottom: 8,
   },
   relatedName: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#003459',
+    fontWeight: "500",
+    color: "#003459",
     marginBottom: 4,
   },
   relatedPrice: {
     fontSize: 14,
-    color: '#FFA500',
-    fontWeight: '600',
+    color: "#FFA500",
+    fontWeight: "600",
   },
 });
