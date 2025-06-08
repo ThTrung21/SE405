@@ -19,29 +19,6 @@ export default function ManageLayout() {
         headerShown: false,
         animation: "slide_from_right",
       }}
-    >
-      <Stack.Screen
-        name="product"
-        options={{
-          title: "Product Management",
-        }}
-      />
-      {profile.role === "ADMIN" ? (
-        <Stack.Screen
-          name="staffmanage"
-          options={{
-            title: "Staff Management",
-          }}
-        />
-      ) : (
-        <></>
-      )}
-      <Stack.Screen
-        name="ordermanage"
-        options={{
-          title: "Order Management",
-        }}
-      />
-    </Stack>
+    />
   );
 }

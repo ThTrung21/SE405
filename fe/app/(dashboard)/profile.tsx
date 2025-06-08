@@ -64,14 +64,21 @@ export default function ProfileScreen() {
         alert("Permission to access media library is required!");
       }
     })();
-    if (!rehydrated) {
-      // Auth state is still being rehydrated
-      return;
+    if (rehydrated && (!loggedIn || !profile)) {
+      router.replace("/(auth)/login");
     }
-    console.log(profile?.avatar);
-    if (!loggedIn) {
-      router.push("/(auth)/login");
-    }
+    // if (!rehydrated) {
+    //   // Auth state is still being rehydrated
+    //   return;
+    // }
+
+    // if (!loggedIn) {
+    //   router.push("/(auth)/login");
+    // }
+    // if (!profile) {
+    //   router.replace("/(auth)/login"); // `replace` prevents going back
+    //   return;
+    //}
     if (profile) {
       setEditAddress(profile.address || "");
       setEditPhone(profile.phone || "");
@@ -80,7 +87,16 @@ export default function ProfileScreen() {
       setRole(profile.role);
       setCurrentPassword(profile.password || "");
     }
-  }, [loggedIn, rehydrated]);
+  }, [loggedIn, rehydrated, profile]);
+  if (!rehydrated) {
+    return null; // or a loading spinner
+  }
+
+  // Optionally also guard for auth
+  if (!loggedIn || !profile) {
+    return null; // wait for redirect
+  }
+
   const pickAvatar = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
