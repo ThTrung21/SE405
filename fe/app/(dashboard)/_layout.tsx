@@ -11,7 +11,7 @@ function CustomTabBarButton({
   accessibilityState,
 }: BottomTabBarButtonProps) {
   const isSelected = accessibilityState?.selected;
-  // const loggedIn =
+
   return (
     <TouchableOpacity
       style={styles.tabButtonWrapper}

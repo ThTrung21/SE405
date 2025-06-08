@@ -68,19 +68,25 @@ export default function ProfileScreen() {
       // Auth state is still being rehydrated
       return;
     }
-    console.log(profile?.avatar);
-    if (!loggedIn) {
-      router.push("/(auth)/login");
-    }
+
     if (profile) {
-      setEditAddress(profile.address || "");
-      setEditPhone(profile.phone || "");
-      setEditName(profile.fullname || "");
-      setEditEmail(profile.email || "");
-      setRole(profile.role);
-      setCurrentPassword(profile.password || "");
+      setEditAddress(profile?.address || "");
+      setEditPhone(profile?.phone || "");
+      setEditName(profile?.fullname || "");
+      setEditEmail(profile?.email || "");
+      setRole(profile?.role);
+      setCurrentPassword(profile?.password || "");
     }
-  }, [loggedIn, rehydrated]);
+  }, [rehydrated]);
+  // if (!rehydrated) {
+  //   return null; // or a loading spinner
+  // }
+
+  // // Optionally also guard for auth
+  // if (!loggedIn || !profile) {
+  //   return null; // wait for redirect
+  // }
+
   const pickAvatar = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -147,10 +153,10 @@ export default function ProfileScreen() {
   const handleupdateprofile = async () => {
     setIsLoading(true);
     let payload = {};
-    if (editName !== profile!.fullname) payload = { ...payload, editName };
-    if (editAddress !== profile!.address) payload = { ...payload, editAddress };
-    if (editPhone !== profile!.phone) payload = { ...payload, editPhone };
-    if (editEmail !== profile!.email) payload = { ...payload, editEmail };
+    if (editName !== profile?.fullname) payload = { ...payload, editName };
+    if (editAddress !== profile?.address) payload = { ...payload, editAddress };
+    if (editPhone !== profile?.phone) payload = { ...payload, editPhone };
+    if (editEmail !== profile?.email) payload = { ...payload, editEmail };
     if (avatarUriToUpload) {
       const blob = await uriToBlob(avatarUriToUpload);
       const filename = avatarUriToUpload.split("/").pop(); // you can make this more unique if needed
@@ -209,8 +215,8 @@ export default function ProfileScreen() {
                 <MaterialIcons name="edit" size={20} color="#fff" />
               </View>
             </TouchableOpacity>
-            <Text style={styles.avatarName}>{profile!.fullname}</Text>
-            <Text style={styles.avatarEmail}>{profile!.email}</Text>
+            <Text style={styles.avatarName}>{profile?.fullname}</Text>
+            <Text style={styles.avatarEmail}>{profile?.email}</Text>
           </View>
           {isStaff ? (
             <View style={styles.manageCard}>
