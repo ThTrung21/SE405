@@ -69,6 +69,18 @@ export default function RootLayout() {
         }}
       />
       <Tabs.Screen
+        name="chatlist"
+        options={{
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? 'chatbubbles' : 'chatbubbles-outline'}
+              size={24}
+              color={focused ? '#FAD69C' : '#888'}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="notifications"
         options={{
           tabBarIcon: ({ color, size, focused }) => (
