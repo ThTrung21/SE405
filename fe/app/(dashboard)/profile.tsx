@@ -64,21 +64,21 @@ export default function ProfileScreen() {
         alert("Permission to access media library is required!");
       }
     })();
-    if (rehydrated && (!loggedIn || !profile)) {
-      router.replace("/(auth)/login");
-    }
+    // if (rehydrated && (!loggedIn || !profile)) {
+    //   router.replace("/(auth)/login");
+    // }
     // if (!rehydrated) {
     //   // Auth state is still being rehydrated
     //   return;
     // }
 
-    // if (!loggedIn) {
-    //   router.push("/(auth)/login");
-    // }
-    // if (!profile) {
-    //   router.replace("/(auth)/login"); // `replace` prevents going back
-    //   return;
-    //}
+    if (!loggedIn) {
+      router.push("/(auth)/login");
+    }
+    if (!profile) {
+      router.replace("/(auth)/login"); // `replace` prevents going back
+      return;
+    }
     if (profile) {
       setEditAddress(profile.address || "");
       setEditPhone(profile.phone || "");
@@ -88,14 +88,14 @@ export default function ProfileScreen() {
       setCurrentPassword(profile.password || "");
     }
   }, [loggedIn, rehydrated, profile]);
-  if (!rehydrated) {
-    return null; // or a loading spinner
-  }
+  // if (!rehydrated) {
+  //   return null; // or a loading spinner
+  // }
 
-  // Optionally also guard for auth
-  if (!loggedIn || !profile) {
-    return null; // wait for redirect
-  }
+  // // Optionally also guard for auth
+  // if (!loggedIn || !profile) {
+  //   return null; // wait for redirect
+  // }
 
   const pickAvatar = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({

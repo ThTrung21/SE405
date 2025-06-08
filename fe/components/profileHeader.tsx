@@ -21,14 +21,8 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ title }) => {
     router.back(); // Go back to the previous screen
   };
   const onLogoutPress = () => {
-    try {
-      console.log("push now");
-      router.push("/(auth)/login");
-    } catch {
-      router.reload();
-    } finally {
-      logOut();
-    }
+    router.push("/(auth)/login");
+    logOut();
   };
 
   return (
