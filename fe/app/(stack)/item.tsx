@@ -200,7 +200,7 @@ export default function Item() {
             onToggle={handleFavoriteChange}
           />
           {/* Add to Cart Button */}
-          {!loggedIn && (
+          {loggedIn && (
             <View
               style={{
                 opacity:

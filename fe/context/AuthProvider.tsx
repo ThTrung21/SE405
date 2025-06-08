@@ -4,26 +4,29 @@ import Toast from "react-native-toast-message";
 // import { login } from "@/apis/auth.api";
 import { useAuthStore } from "../stores/useAuthStore";
 import { useAppStore } from "../stores/useAppStore";
-import { router } from "expo-router";
+import { router, useRouter } from "expo-router";
 import { Role } from "../constants/role";
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
+import { login } from "apis/auth.api";
 
 type AuthContextType = {
   logIn: (payload: { phone: string; password: string }) => Promise<void>;
   logOut: () => void;
 };
 
-const AuthContext = createContext<AuthContextType | null>(null);
+export const AuthContext = createContext<AuthContextType | null>(null);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+const AuthProvider = ({ children }: { children: ReactNode }) => {
   const setIsLoading = useAppStore((state) => state.setIsLoading);
   const setToken = useAuthStore((state) => state.setToken);
   const setLoggedIn = useAuthStore((state) => state.setLoggedIn);
   const setProfile = useAuthStore((state) => state.setProfile);
   const reset = useAuthStore((state) => state.reset);
+  const navigate = useRouter();
+  const profile = useAuthStore((state) => state.profile);
 
-  const logIn = async (payload: { phone: string; password: string }) => {
+  const logIn = async (payload: any) => {
     setIsLoading(true);
     try {
       const { data: profile, token }: any = await login(payload);
@@ -51,10 +54,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       // Navigate based on role
       if (profile.role != Role.ADMIN) {
-        router.replace("/(tabs)/home");
+        router.replace("/(dashboard)/homepage");
       }
       // if (profile.role === Role.ADMIN) {
-      else router.replace("/admin");
+      else router.replace("/(dashboard)/homepage");
       // } else if (profile.role === Role.STAFF) {
       //   router.replace("/staff");
       // }
@@ -81,12 +84,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     </AuthContext.Provider>
   );
 };
+export default AuthProvider;
 
-export const useAuth = () => {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used inside <AuthProvider>");
-  return ctx;
-};
+// export const useAuth = () => {
+//   const ctx = useContext(AuthContext);
+//   if (!ctx) throw new Error("useAuth must be used inside <AuthProvider>");
+//   return ctx;
+// };
 
 // Request push notification permissions
 // const { status: existingStatus } = await Notifications.getPermissionsAsync();

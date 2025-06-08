@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   View,
   Text,
@@ -6,9 +6,10 @@ import {
   StyleSheet,
   ViewStyle,
   TextStyle,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { logOut } from "utils/auth";
 
 interface ProfileHeaderProps {
   title: string;
@@ -21,8 +22,8 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ title }) => {
   };
 
   const onLogoutPress = () => {
-    // Handle onLogoutPress
-    router.replace('login')
+    logOut();
+    router.replace("login");
   };
 
   return (
@@ -54,17 +55,17 @@ const styles = StyleSheet.create<{
 }>({
   header: {
     paddingHorizontal: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginTop: 10,
   },
   title: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   headerIcons: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
 });

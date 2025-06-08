@@ -1,26 +1,44 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import ProfileHeader from '../../components/profileHeader';
-import { useRouter } from 'expo-router';
+"use client";
+import React, { useEffect } from "react";
+import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import ProfileHeader from "../../components/profileHeader";
+import { useRouter } from "expo-router";
+import { useAuthStore } from "stores/useAuthStore";
 
 export default function ProfileScreen() {
   const router = useRouter();
 
+  const userProfile = useAuthStore((state) => state.profile);
+  const loggedIn = useAuthStore((state) => state.loggedIn);
+  const rehydrated = useAuthStore((state) => state.rehydrated);
+  useEffect(() => {
+    // if (!rehydrated) {
+    //   // Auth state is still being rehydrated
+    //   return;
+    // }
+    // if (!loggedIn) {
+    //   router.push("/(auth)/login");
+    // }
+  }, [loggedIn, rehydrated]);
+  const userId = Number(userProfile?.id);
   const onOrdersPress = () => {
-    router.push('/orders');
+    router.push("/orders");
   };
   const onAddressesPress = () => {
-    router.push('/addresses');
+    router.push({
+      pathname: "/addresses",
+      // params: { id: userId },
+    });
   };
-  const onPaymentPress = () => {
-    router.push('/payment');
-  };
+  // const onPaymentPress = () => {
+  //   router.push('/payment');
+  // };
   const onMyReviewsPress = () => {
-    router.push('/myReviews');
+    router.push("/myReviews");
   };
   const onSettingsPress = () => {
-    router.push('/settings');
+    router.push("/settings");
   };
 
   return (
@@ -31,7 +49,7 @@ export default function ProfileScreen() {
       <View style={styles.content}>
         <View style={styles.profileInfo}>
           <Image
-            source={require('../../assets/default_avatar.jpg')}
+            source={require("../../assets/default_avatar.jpg")}
             style={styles.avatar}
           />
           <View>
@@ -61,8 +79,8 @@ export default function ProfileScreen() {
             onPress={onAddressesPress}
             activeOpacity={0.7}
           >
-            <Text style={styles.cardTitle}>Shipping Addresses</Text>
-            <Text style={styles.cardSubtitle}>03 Addresses</Text>
+            <Text style={styles.cardTitle}>Addresses</Text>
+            <Text style={styles.cardSubtitle}>Default Delivery Addresses</Text>
             <Ionicons
               name="chevron-forward"
               size={20}
@@ -71,7 +89,7 @@ export default function ProfileScreen() {
             />
           </TouchableOpacity>
 
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={styles.cardItem}
             onPress={onPaymentPress}
             activeOpacity={0.7}
@@ -84,7 +102,7 @@ export default function ProfileScreen() {
               color="#ccc"
               style={styles.chevron}
             />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <TouchableOpacity
             style={styles.cardItem}
@@ -126,15 +144,15 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    paddingVertical: 24
+    backgroundColor: "#fff",
+    paddingVertical: 24,
   },
   content: {
     padding: 16,
   },
   profileInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 10,
     marginBottom: 20,
     marginTop: 20,
@@ -147,16 +165,16 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 18,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   email: {
     fontSize: 14,
-    color: '#888',
+    color: "#888",
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 10,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 5,
@@ -164,19 +182,19 @@ const styles = StyleSheet.create({
   cardItem: {
     paddingVertical: 15,
     paddingHorizontal: 15,
-    position: 'relative',
+    position: "relative",
   },
   cardTitle: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   cardSubtitle: {
     fontSize: 12,
-    color: '#888',
+    color: "#888",
   },
   chevron: {
-    position: 'absolute',
+    position: "absolute",
     right: 15,
-    top: '40%',
+    top: "40%",
   },
 });

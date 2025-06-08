@@ -55,6 +55,7 @@ export class CreateUserDto {
 
   @IsString()
   @IsEnum(Status)
+  @IsOptional()
   public status: Status;
 }
 
