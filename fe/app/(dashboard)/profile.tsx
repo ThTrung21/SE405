@@ -23,6 +23,7 @@ import { app } from "utils/firebase";
 import { changeUserPassword, updateUserProfile } from "apis/user.api";
 import Toast from "react-native-toast-message";
 import { executeMutation } from "firebase/data-connect";
+import { Role } from "constants/role";
 const defaultAvatar = require("../../assets/avatar-default.png");
 const uriToBlob = async (uri: string): Promise<Blob> => {
   const response = await fetch(uri);
@@ -42,7 +43,7 @@ export default function ProfileScreen() {
   const rehydrated = useAuthStore((state) => state.rehydrated);
   const isLoading = useAppStore((state) => state.isLoading);
   const setIsLoading = useAppStore((state) => state.setIsLoading);
-
+  const [role, setRole] = useState("");
   const setProfile = useAuthStore((state) => state.setProfile);
 
   // edit info
@@ -76,6 +77,7 @@ export default function ProfileScreen() {
       setEditPhone(profile.phone || "");
       setEditName(profile.fullname || "");
       setEditEmail(profile.email || "");
+      setRole(profile.role);
       setCurrentPassword(profile.password || "");
     }
   }, [loggedIn, rehydrated]);
@@ -141,6 +143,7 @@ export default function ProfileScreen() {
       });
     }
   };
+
   const handleupdateprofile = async () => {
     setIsLoading(true);
     let payload = {};
@@ -179,6 +182,7 @@ export default function ProfileScreen() {
       setIsLoading(false);
     }
   };
+  const isStaff = loggedIn && (role === "ADMIN" || role === "STAFF");
   const onOrdersPress = () => {
     router.push("/orders");
   };
@@ -208,6 +212,26 @@ export default function ProfileScreen() {
             <Text style={styles.avatarName}>{profile!.fullname}</Text>
             <Text style={styles.avatarEmail}>{profile!.email}</Text>
           </View>
+          {isStaff ? (
+            <View style={styles.manageCard}>
+              <TouchableOpacity
+                style={styles.cardItem}
+                onPress={() => router.push("(manage)/manage")}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.cardTitle}>Manage</Text>
+
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color="#ccc"
+                  style={styles.chevron}
+                />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <></>
+          )}
           <View style={styles.card}>
             <TouchableOpacity
               style={styles.cardItem}
@@ -518,6 +542,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 5,
+  },
+  manageCard: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 5,
+    marginBottom: 12,
   },
   cardItem: {
     paddingVertical: 15,

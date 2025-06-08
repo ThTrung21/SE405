@@ -97,7 +97,7 @@ export default function RootLayout() {
           ),
         }}
       />
-      <Tabs.Screen
+      {/* <Tabs.Screen
         name="manage"
         options={{
           tabBarIcon: ({ color, size, focused }) => (
@@ -108,7 +108,7 @@ export default function RootLayout() {
             />
           ),
         }}
-      />
+      /> */}
       <Tabs.Screen
         name="profile"
         options={{

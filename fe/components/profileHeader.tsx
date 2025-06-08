@@ -7,7 +7,7 @@ import {
   ViewStyle,
   TextStyle,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { AntDesign, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { logOut } from "utils/auth";
 
@@ -17,10 +17,9 @@ interface ProfileHeaderProps {
 
 const ProfileHeader: React.FC<ProfileHeaderProps> = ({ title }) => {
   const router = useRouter();
-  const onSearchPress = () => {
-    // Handle onSearchPress
+  const onBackPress = () => {
+    router.back(); // Go back to the previous screen
   };
-
   const onLogoutPress = () => {
     logOut();
     router.replace("login");
@@ -29,8 +28,8 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ title }) => {
   return (
     <View style={styles.header}>
       {/* Search Icon */}
-      <TouchableOpacity onPress={onSearchPress} activeOpacity={0.7}>
-        <Ionicons name="search" size={20} />
+      <TouchableOpacity onPress={onBackPress} activeOpacity={0.7}>
+        <AntDesign name="left" size={20} />
       </TouchableOpacity>
 
       {/* Title */}
