@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+"use client";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -8,58 +9,37 @@ import {
   FlatList,
   StyleSheet,
   SafeAreaView,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
-import Header from '../../components/header';
-import AppButton from '../../components/appButton';
-
-const initialCartItems = [
-  {
-    id: '1',
-    name: 'Poodle Tiny Dairy Cow',
-    price: 25,
-    image: require('../../assets/dog1.png'),
-    quantity: 1,
-  },
-  {
-    id: '2',
-    name: 'Pomeranian White',
-    price: 20,
-    image: require('../../assets/dog2.png'),
-    quantity: 1,
-  },
-  {
-    id: '3',
-    name: 'Alaskan Malamute Grey',
-    price: 50,
-    image: require('../../assets/dog3.png'),
-    quantity: 1,
-  },
-];
+import Header from "../../components/header";
+import AppButton from "../../components/appButton";
+import { useCartStore } from "stores/useCartStore";
+import { router } from "expo-router";
 
 export default function CartScreen() {
-  const [cartItems, setCartItems] = useState(initialCartItems);
-  const [promoCode, setPromoCode] = useState('');
+  const updateItemQuantity = useCartStore((state) => state.updateItemQuantity);
+  const removeFromCart = useCartStore((state) => state.removeFromCart);
+  const cart = useCartStore((state) => state.cart);
+  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  const updateQuantity = (id: string, amount: number) => {
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? { ...item, quantity: Math.max(1, item.quantity + amount) }
-          : item
-      )
-    );
+  // const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const handleCheckout = () => {
+    const selectedOrders = cart.map((item) => ({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+      image: item.images[0], // only include the first image
+    }));
+
+    const payload = {
+      items: selectedOrders,
+      total,
+    };
+    const serializedOrders = encodeURIComponent(JSON.stringify(payload));
+    router.push(`/checkout?orders=${serializedOrders}`);
   };
-
-  const removeItem = (id: string) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== id));
-  };
-
-  const total = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -67,60 +47,41 @@ export default function CartScreen() {
       <Header title="My Cart" />
 
       <FlatList
-        style={{ padding: 20 }}
-        data={cartItems}
-        keyExtractor={(item) => item.id}
+        style={styles.listitemcontainer}
+        data={cart}
+        keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <View style={styles.cartItem}>
-            <Image source={item.image} style={styles.image} />
-            <View style={{ flex: 1 }}>
+            <Image source={{ uri: item.images[0] }} style={styles.image} />
+            <View style={styles.info}>
               <Text style={styles.name}>{item.name}</Text>
-              <Text style={styles.price}>${item.price.toFixed(2)}</Text>
+              <Text style={styles.price}>${item.price}</Text>
               <View style={styles.quantityRow}>
-                <TouchableOpacity onPress={() => updateQuantity(item.id, -1)}>
+                <TouchableOpacity
+                  onPress={() => updateItemQuantity(item.id, item.quantity - 1)}
+                >
                   <Ionicons
                     name="remove-circle-outline"
                     size={24}
                     color="black"
                   />
                 </TouchableOpacity>
-                <Text style={styles.quantityText}>
-                  {item.quantity.toString().padStart(2, '0')}
-                </Text>
-                <TouchableOpacity onPress={() => updateQuantity(item.id, 1)}>
-                  <Ionicons
-                    name="add-circle-outline"
-                    size={24}
-                    color="black"
-                  />
+                <Text style={styles.quantity}>{item.quantity}</Text>
+                <TouchableOpacity
+                  onPress={() => updateItemQuantity(item.id, item.quantity + 1)}
+                >
+                  <Ionicons name="add-circle-outline" size={24} color="black" />
                 </TouchableOpacity>
               </View>
             </View>
-            <TouchableOpacity onPress={() => removeItem(item.id)}>
-              <Ionicons
-                name="close-circle-outline"
-                size={24}
-                color="#6b7280"
-              />
+            <TouchableOpacity onPress={() => removeFromCart(item.id)}>
+              <Ionicons name="trash-outline" size={24} color="red" />
             </TouchableOpacity>
           </View>
         )}
       />
 
-      <View style={styles.bottomContainer}>
-        {/* Promo Code */}
-        <View style={styles.promoRow}>
-          <TextInput
-            placeholder="Enter your promo code"
-            style={styles.promoInput}
-            value={promoCode}
-            onChangeText={setPromoCode}
-          />
-          <TouchableOpacity style={styles.promoButton}>
-            <Ionicons name="arrow-forward" size={20} color="#fff" />
-          </TouchableOpacity>
-        </View>
-
+      <View style={styles.footer}>
         {/* Total */}
         <View style={styles.totalRow}>
           <Text style={styles.totalLabel}>Total:</Text>
@@ -128,7 +89,7 @@ export default function CartScreen() {
         </View>
 
         {/* Checkout */}
-        <AppButton title="Check Out" href='checkout' />
+        <AppButton title="Check Out" onPress={handleCheckout} />
       </View>
     </SafeAreaView>
   );
@@ -137,16 +98,28 @@ export default function CartScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    paddingVertical: 24
+    backgroundColor: "#fff",
+    paddingVertical: 24,
+    paddingHorizontal: 16,
   },
   bottomContainer: {
-    marginBottom: 24,
-    padding: 16,
+    // marginBottom: 24,
+    paddingHorizontal: 16,
+  },
+  info: {
+    flex: 1,
+    marginHorizontal: 12,
+  },
+  listitemcontainer: {
+    padding: 24,
+  },
+  quantity: {
+    fontSize: 16,
+    fontWeight: "500",
   },
   cartItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 16,
     gap: 12,
   },
@@ -157,55 +130,65 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   price: {
     fontSize: 14,
-    color: '#10b981',
+    color: "#10b981",
   },
   quantityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 6,
     gap: 10,
   },
   quantityText: {
     fontSize: 16,
     width: 36,
-    textAlign: 'center',
+    textAlign: "center",
   },
   promoRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginTop: 12,
     marginBottom: 16,
   },
   promoInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#d1d5db',
+    borderColor: "#d1d5db",
     borderRadius: 8,
     paddingHorizontal: 12,
     height: 44,
   },
   promoButton: {
-    backgroundColor: '#003459',
+    backgroundColor: "#003459",
     paddingHorizontal: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     borderRadius: 8,
     marginLeft: 8,
   },
   totalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 16,
   },
   totalLabel: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   totalValue: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
+  },
+  footer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 6,
+    backgroundColor: "white",
+    borderTopWidth: 1,
+    borderTopColor: "#ccc",
   },
 });

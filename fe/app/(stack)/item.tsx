@@ -38,7 +38,7 @@ export default function Item() {
   const [previewImage, setPreviewImage] = useState<string>();
   const loggedIn = useAuthStore((state) => state.loggedIn);
   const handleFavoriteChange = (fav: any) => {
-    console.log("Is favorite:", fav);
+    //
   };
   const addToCart = useCartStore((state) => state.addToCart);
   useEffect(() => {
