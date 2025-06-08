@@ -190,20 +190,29 @@ export default function Homepage() {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <MainHeader title="Products" />
-      {/* <View style={{ height: 50 }}>
-        <TextInput>
-          size="large" prefix={<MaterialIcons name="search" />}
-          placeholder="Search..." value={searchValue}
-          {/* onChange={(e) => setSearchValue(e.target.value.toString)} *
-        </TextInput>
-      </View> */}
+      <View style={styles.searchContainer}>
+        <MaterialIcons
+          name="search"
+          size={20}
+          color="#555"
+          style={styles.searchIcon}
+        />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search..."
+          value={searchValue}
+          onChangeText={(text) => setSearchValue(text)}
+          placeholderTextColor="#888"
+          onSubmitEditing={handleSearchProduct}
+        />
+      </View>
       <View style={{ height: 120 }}>
         {/*Search box  */}
 
         {/* Categories */}
         <ScrollView
           horizontal
-          showsHorizontalScrollIndicator={true}
+          showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.categoriesContainer}
           scrollEnabled={true}
         >
@@ -250,22 +259,32 @@ export default function Homepage() {
         }}
         renderItem={({ item }) => (
           <View style={styles.card}>
-            <View>
-              <Image source={{ uri: item.images[0] }} style={styles.image} />
-              <TouchableOpacity
-                onPress={() =>
-                  router.push({
-                    pathname: "/(stack)/item",
-                    params: { id: item.id },
-                  })
-                }
-                style={styles.cartButton}
-              >
-                <Ionicons name="bag-handle" size={20} color="#fff" />
-              </TouchableOpacity>
-            </View>
-            <Text style={styles.petName}>{item.name}</Text>
-            <Text style={styles.petPrice}>${item.price}</Text>
+            <TouchableOpacity
+              onPress={() =>
+                router.push({
+                  pathname: "/(stack)/item",
+                  params: { id: item.id },
+                })
+              }
+              style={{ flex: 1 }} // Make TouchableOpacity take up the whole card
+            >
+              <View>
+                <Image source={{ uri: item.images[0] }} style={styles.image} />
+                <TouchableOpacity
+                  onPress={() =>
+                    router.push({
+                      pathname: "/(stack)/item",
+                      params: { id: item.id },
+                    })
+                  }
+                  style={styles.cartButton}
+                >
+                  <Ionicons name="bag-handle" size={20} color="#fff" />
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.petName}>{item.name}</Text>
+              <Text style={styles.petPrice}>${item.price}</Text>
+            </TouchableOpacity>
           </View>
         )}
         style={{ flex: 1 }}
@@ -284,6 +303,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
     flexDirection: "row",
+  },
+  searchContainer: {
+    height: 40,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f1f1f1",
+    marginHorizontal: 16,
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 12,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    borderWidth: 0,
+    fontSize: 14,
+
+    color: "#000",
   },
   // scrollContainer: {
   //   // Enable touch-action for horizontal pan dragging on web

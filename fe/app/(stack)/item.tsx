@@ -1,62 +1,73 @@
-import React, { useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams, Link } from 'expo-router';
+"use client";
 
-import FavoriteButton from '../../components/favoriteButton';
-import Header from '../../components/header';
-import AppButton from '../../components/appButton';
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
+} from "react-native";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useLocalSearchParams, Link, usePathname } from "expo-router";
 
-const petData = [
-  {
-    id: '1',
-    name: 'Alaskan Malamute Grey',
-    price: 12,
-    image: require('../../assets/dog1.png'),
-    description: 'Strong and friendly dog, perfect for cold climates.',
-    rating: 4.5,
-    reviews: 50,
-  },
-  {
-    id: '2',
-    name: 'Poodle Tiny Dairy Cow',
-    price: 25,
-    image: require('../../assets/dog2.png'),
-    description: 'Smart and active, great companion for families.',
-    rating: 4.8,
-    reviews: 80,
-  },
-  {
-    id: '3',
-    name: 'Pomeranian White',
-    price: 20,
-    image: require('../../assets/dog3.png'),
-    description: 'Cute and fluffy, very playful and loving.',
-    rating: 4.2,
-    reviews: 40,
-  },
-  {
-    id: '4',
-    name: 'Pomeranian White',
-    price: 50,
-    image: require('../../assets/dog4.png'),
-    description: 'Rare breed, charming and loyal companion.',
-    rating: 4.9,
-    reviews: 60,
-  },
-];
+import FavoriteButton from "../../components/favoriteButton";
+import Header from "../../components/header";
+import AppButton from "../../components/appButton";
+import { useAppStore } from "stores/useAppStore";
+import { useProductStore } from "stores/useProductStore";
+import { getProductById } from "apis/product.api";
+import { useAuthStore } from "stores/useAuthStore";
+import { useCartStore } from "stores/useCartStore";
+import Toast from "react-native-toast-message";
+import MainHeader from "components/mainHeader";
+import SubHeader from "components/subheader";
+import { Bold } from "lucide-react-native";
 
 export default function Item() {
   const { id } = useLocalSearchParams(); // get id from route params
-  const pet = petData.find((p) => p.id === id);
-
+  const isLoading = useAppStore((state) => state.isLoading);
+  const setIsLoading = useAppStore((state) => state.setIsLoading);
+  const setProduct = useProductStore((state) => state.setProduct);
+  const product = useProductStore((state) => state.product);
+  const pathname = usePathname();
+  // const params: any = params();
   const [quantity, setQuantity] = useState(1);
-
+  const [previewImage, setPreviewImage] = useState<string>();
+  const loggedIn = useAuthStore((state) => state.loggedIn);
   const handleFavoriteChange = (fav: any) => {
-    console.log('Is favorite:', fav);
+    console.log("Is favorite:", fav);
   };
+  const addToCart = useCartStore((state) => state.addToCart);
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        console.log("Fetching products...id = ", id);
+        const productData = await getProductById(Number(id));
 
-  if (!pet) {
+        setProduct(productData.data);
+        setPreviewImage(productData.data.images[0]);
+        console.log(productData.data.images[0]);
+        // setQuantity(0);
+        if (productData.data.stock === 0) {
+          setQuantity(0);
+        } else {
+          setQuantity(1);
+        }
+      } catch (error) {
+        console.error("Fetch error:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (!product) {
     return (
       <View style={styles.center}>
         <Text>Pet not found.</Text>
@@ -67,45 +78,155 @@ export default function Item() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <Header title="Pet Details" />
-      <View style={styles.card}>
+      <SubHeader title="Pet Details" />
+
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Pet Image */}
-        <Image source={pet.image} style={styles.image} />
+        <View style={{ width: "100%", alignItems: "center", marginBottom: 20 }}>
+          <View style={styles.previewContainer}>
+            {isLoading ? (
+              <ActivityIndicator size="large" color="#ccc" />
+            ) : (
+              <Image
+                source={{ uri: previewImage }}
+                style={styles.previewImage}
+                resizeMode="cover"
+              />
+            )}
+          </View>
+
+          {/* Thumbnail row */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ marginTop: 16 }}
+          >
+            {product?.images?.map((image, index) => (
+              <TouchableOpacity
+                key={index}
+                onPress={() => setPreviewImage(image)}
+                activeOpacity={0.8}
+                style={[
+                  styles.thumbnailWrapper,
+                  previewImage === image && styles.activeThumbnail,
+                ]}
+              >
+                <Image source={{ uri: image }} style={styles.thumbnailImage} />
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
 
         {/* Product Info */}
         <View style={styles.info}>
-          <Text style={styles.title}>{pet.name}</Text>
-          <Text style={styles.price}>${pet.price.toFixed(2)}</Text>
+          <Text style={styles.title}>{product.name}</Text>
+          <Text style={styles.price}>${product.price}</Text>
+          <Text style={styles.title}>Stock: {product.stock} left</Text>
+          {/* Description */}
+          <span style={styles.desc}>Description:</span>
+          <Text style={styles.description}>{product.desc}</Text>
 
           {/* Rating */}
           <View style={styles.ratingRow}>
-            <Ionicons name="star" size={16} color="#facc15" />
-            <Text style={styles.ratingText}>{pet.rating} </Text>
-            <Link href="/review">
-              <Text style={styles.reviewCount}>({pet.reviews} reviews)</Text>
-            </Link>
+            <MaterialCommunityIcons
+              name="bookmark-check"
+              size={20}
+              color="#facc15"
+            />
+            <Text style={styles.ratingText}>{product.score} </Text>
           </View>
 
           {/* Quantity Selector */}
           <View style={styles.quantityRow}>
-            <TouchableOpacity onPress={() => setQuantity(Math.max(1, quantity - 1))}>
-              <Ionicons name="remove-outline" size={24} color="black" />
+            <TouchableOpacity
+              disabled={product.stock === 0 || quantity <= 1}
+              onPress={() => setQuantity(Math.max(1, quantity - 1))}
+            >
+              <Ionicons
+                name="remove-outline"
+                size={24}
+                color={product.stock === 0 || quantity <= 1 ? "#ccc" : "black"}
+              />
             </TouchableOpacity>
-            <Text style={styles.quantityText}>{quantity.toString().padStart(2, '0')}</Text>
-            <TouchableOpacity onPress={() => setQuantity(quantity + 1)}>
-              <Ionicons name="add-outline" size={24} color="black" />
+
+            <Text style={styles.quantityText}>
+              {quantity.toString().padStart(2, "0")}
+            </Text>
+
+            <TouchableOpacity
+              disabled={product.stock == 0 || quantity >= product.stock}
+              onPress={() => {
+                if (product.stock > 0 && quantity < product.stock) {
+                  setQuantity(quantity + 1);
+                }
+              }}
+            >
+              <Ionicons
+                name="add-outline"
+                size={24}
+                color={
+                  product.stock === 0 || quantity >= product.stock
+                    ? "#ccc"
+                    : "black"
+                }
+              />
             </TouchableOpacity>
+            {product.stock === 0 && (
+              <Text
+                style={{
+                  color: "#B22222",
+                  fontWeight: "bold",
+                  marginTop: 4,
+                  marginLeft: 4,
+                  fontSize: 20,
+                }}
+              >
+                Out of stock
+              </Text>
+            )}
           </View>
+        </View>
+      </ScrollView>
 
-          {/* Description */}
-          <Text style={styles.description}>{pet.description}</Text>
-
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            {/* Add to Favorites */}
-            <FavoriteButton initialFavorite={false} onToggle={handleFavoriteChange} />
-            {/* Add to Cart Button */}
-            <AppButton title="Add to cart" onPress={() => console.log('AddToCart pressed')} />
-          </View>
+      {/* Footer (Sticky at Bottom) */}
+      <View style={styles.footer}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          {/* Add to Favorites */}
+          <FavoriteButton
+            initialFavorite={false}
+            onToggle={handleFavoriteChange}
+          />
+          {/* Add to Cart Button */}
+          {!loggedIn && (
+            <View
+              style={{
+                opacity:
+                  product.stock === 0 || quantity > product.stock ? 0.5 : 1,
+                marginHorizontal: "auto",
+                width: "60%",
+              }}
+              pointerEvents={
+                product.stock === 0 || quantity > product.stock
+                  ? "none"
+                  : "auto"
+              }
+            >
+              <AppButton
+                title="Add to cart"
+                onPress={() => {
+                  product && addToCart({ ...product, quantity });
+                  Toast.show({
+                    type: "success",
+                    text1: "Added to cart!",
+                    text2: `${product.name} x${quantity} was added.`,
+                  });
+                }}
+              />
+            </View>
+          )}
         </View>
       </View>
     </View>
@@ -113,79 +234,129 @@ export default function Item() {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1, // Make the container take full height of the screen
+    padding: 16,
+    backgroundColor: "#fff",
+  },
+  scrollContainer: {
+    paddingBottom: 80, // Add some padding to make room for the footer
+  },
+  footer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 6,
+    backgroundColor: "white",
+    borderTopWidth: 1,
+    borderTopColor: "#ccc",
+    // Optional: Adjust the height of the footer
+  },
+  previewContainer: {
+    width: "90%",
+    height: 350,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: "#ccc",
+    overflow: "hidden",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  previewImage: {
+    width: "100%",
+    height: "100%",
+  },
+  thumbnailWrapper: {
+    marginRight: 12,
+    borderRadius: 8,
+    overflow: "hidden",
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  activeThumbnail: {
+    borderColor: "#555",
+    opacity: 1,
+  },
+  thumbnailImage: {
+    width: 80,
+    height: 80,
+    resizeMode: "cover",
+  },
   center: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    paddingVertical: 24
-  },
+
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 16,
-    overflow: 'hidden',
+    overflow: "hidden",
     margin: 16,
   },
   image: {
-    width: '100%',
+    width: "100%",
     maxHeight: 400,
-    resizeMode: 'cover',
+    resizeMode: "cover",
   },
   info: {
     padding: 16,
   },
   title: {
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   price: {
     fontSize: 18,
-    color: '#10b981',
+    color: "#10b981",
     marginTop: 4,
   },
   ratingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 4,
   },
   ratingText: {
     marginLeft: 4,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   reviewCount: {
     marginLeft: 8,
-    color: '#6b7280',
+    color: "#6b7280",
   },
   quantityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 12,
-    gap: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 6,
+    gap: 8,
   },
   quantityText: {
     fontSize: 18,
-    fontWeight: '500',
+    fontWeight: "500",
     width: 40,
-    textAlign: 'center',
+    textAlign: "center",
+  },
+  desc: {
+    marginTop: 8,
+    fontSize: 20,
+    fontWeight: "600",
   },
   description: {
-    color: '#4b5563',
+    color: "#4b5563",
     fontSize: 14,
     lineHeight: 20,
     marginBottom: 16,
   },
   button: {
-    backgroundColor: '#1e40af',
+    backgroundColor: "#1e40af",
     paddingVertical: 12,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
   },
   buttonText: {
-    color: '#fff',
-    fontWeight: '600',
+    color: "#fff",
+    fontWeight: "600",
     fontSize: 16,
   },
 });

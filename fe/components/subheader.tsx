@@ -7,21 +7,18 @@ import {
   TextStyle,
   ViewStyle,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { AntDesign, Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
 interface MainHeaderProps {
   title: string;
 }
 
-const MainHeader: React.FC<MainHeaderProps> = ({ title }) => {
+const SubHeader: React.FC<MainHeaderProps> = ({ title }) => {
   const router = useRouter();
-
-  // const onSearchPress = () => {
-  //   console.log('Search pressed');
-  //   // Additional search logic
-  // };
-
+  const onBackPress = () => {
+    router.back(); // Go back to the previous screen
+  };
   const onCartPress = () => {
     router.push("/(stack)/cart");
   };
@@ -29,8 +26,8 @@ const MainHeader: React.FC<MainHeaderProps> = ({ title }) => {
   return (
     <View style={styles.header}>
       {/* Search Icon */}
-      <TouchableOpacity style={{ opacity: 0 }}>
-        <Ionicons name="search" size={20} />
+      <TouchableOpacity onPress={onBackPress}>
+        <AntDesign name="left" size={20} color="black" />
       </TouchableOpacity>
 
       {/* Title */}
@@ -46,7 +43,7 @@ const MainHeader: React.FC<MainHeaderProps> = ({ title }) => {
   );
 };
 
-export default MainHeader;
+export default SubHeader;
 
 const styles = StyleSheet.create<{
   header: ViewStyle;

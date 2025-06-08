@@ -1,7 +1,8 @@
 // import { StatusBar} from 'react-native'
-import { StatusBar } from 'expo-status-bar'
-import React from 'react'
-import { Stack } from 'expo-router'
+import { StatusBar } from "expo-status-bar";
+import React from "react";
+import { Stack } from "expo-router";
+import Toast from "react-native-toast-message";
 
 const RootLayout: React.FC = () => {
   return (
@@ -9,18 +10,19 @@ const RootLayout: React.FC = () => {
       <StatusBar style="auto" />
       <Stack
         screenOptions={{
-          headerStyle: { backgroundColor: '#ddd' },
-          headerTintColor: '#333',
+          headerStyle: { backgroundColor: "#ddd" },
+          headerTintColor: "#333",
           headerShown: false,
         }}
       >
-        <Stack.Screen name="index" options={{ title: 'Welcome' }} />
+        <Stack.Screen name="index" options={{ title: "Welcome" }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(dashboard)" options={{ headerShown: false }} />
         <Stack.Screen name="(stack)" options={{ headerShown: false }} />
       </Stack>
+      <Toast />
     </>
-  )
-}
+  );
+};
 
-export default RootLayout
+export default RootLayout;
