@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { useLocalSearchParams, Link, usePathname } from "expo-router";
+import { useLocalSearchParams, Link, usePathname, router } from "expo-router";
 
 import FavoriteButton from "../../components/favoriteButton";
 import Header from "../../components/header";
@@ -25,7 +25,7 @@ import Toast from "react-native-toast-message";
 import MainHeader from "components/mainHeader";
 import SubHeader from "components/subheader";
 import { Bold } from "lucide-react-native";
-
+import { ImageSlider } from '../../components/ImageSlider';
 export default function Item() {
   const { id } = useLocalSearchParams(); // get id from route params
   const isLoading = useAppStore((state) => state.isLoading);
@@ -76,9 +76,9 @@ export default function Item() {
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Header */}
-      <SubHeader title="Pet Details" />
+      <SubHeader title="Product Details" />
 
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
@@ -214,6 +214,14 @@ export default function Item() {
                   : "auto"
               }
             >
+              {/* Need Advice Button */}
+          <TouchableOpacity 
+            style={styles.adviceButton} 
+            onPress={() => router.push({ pathname: '/chat', params: { id: product.id } })}
+          >
+            <Ionicons name="chatbubble-outline" size={20} color="#FFA500" />
+            <Text style={styles.adviceButtonText}>Need advice?</Text>
+          </TouchableOpacity>
               <AppButton
                 title="Add to cart"
                 onPress={() => {
@@ -229,7 +237,29 @@ export default function Item() {
           )}
         </View>
       </View>
-    </View>
+
+      {/* Related Products Section */}
+      <View style={styles.relatedSection}>
+        <Text style={styles.relatedTitle}>Related Products</Text>
+        <FlatList
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          data={petData.filter(p => p.id !== pet.id)}
+          renderItem={({ item }) => (
+            <TouchableOpacity 
+              style={styles.relatedItem}
+              onPress={() => router.push({ pathname: '/item', params: { id: item.id } })}
+            >
+              <Image source={item.images[0]} style={styles.relatedImage} />
+              <Text style={styles.relatedName} numberOfLines={1}>{item.name}</Text>
+              <Text style={styles.relatedPrice}>${item.price}</Text>
+            </TouchableOpacity>
+          )}
+          keyExtractor={item => item.id}
+          contentContainerStyle={styles.relatedList}
+        />
+      </View>
+    </ScrollView>
   );
 }
 
@@ -358,5 +388,61 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "600",
     fontSize: 16,
+  },
+  adviceButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFA50022',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    gap: 8,
+    marginBottom: 16,
+    alignSelf: 'flex-start',
+  },
+  adviceButtonText: {
+    color: '#FFA500',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  relatedSection: {
+    padding: 16,
+    backgroundColor: '#fff',
+    marginTop: 16,
+  },
+  relatedTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#003459',
+    marginBottom: 12,
+  },
+  relatedList: {
+    paddingRight: 16,
+  },
+  relatedItem: {
+    width: 160,
+    marginRight: 12,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#eee',
+  },
+  relatedImage: {
+    width: '100%',
+    height: 120,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  relatedName: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#003459',
+    marginBottom: 4,
+  },
+  relatedPrice: {
+    fontSize: 14,
+    color: '#FFA500',
+    fontWeight: '600',
   },
 });

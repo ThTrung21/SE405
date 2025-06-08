@@ -16,8 +16,7 @@ const Colors = {
     muted: '#777777',
     tabBarIcon: '#666666',
     warning: "#cc47a",
-
-    
+    accent: '#FAD69C',
 }
 
 export default Colors;

@@ -9,11 +9,11 @@ import {
   SafeAreaView,
   Dimensions,
   ListRenderItemInfo,
+  TextInput,
 } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
-import MainHeader from '../../components/mainHeader';
 import AppButton from '../../components/appButton';
 
 type Pet = {
@@ -34,6 +34,8 @@ const initialPets: Pet[] = [
 const FavoritesScreen: React.FC = () => {
   const [pets, setPets] = useState<Pet[]>(initialPets);
   const [cart, setCart] = useState<Pet[]>([]);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const router = useRouter();
 
@@ -59,6 +61,8 @@ const FavoritesScreen: React.FC = () => {
     router.push('/cart');
   };
 
+  const filteredPets = pets.filter(pet => pet.name.toLowerCase().includes(searchQuery.toLowerCase()));
+
   const renderItem = ({ item }: ListRenderItemInfo<Pet>) => (
     <View style={styles.card}>
       <Image source={{ uri: item.image }} style={styles.image} />
@@ -81,17 +85,37 @@ const FavoritesScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <MainHeader title="Favorites" />
+      {/* Header with Search and Cart */}
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.headerIcon} onPress={() => setShowSearch((prev) => !prev)}>
+          <Ionicons name="search" size={28} color="#003459" />
+        </TouchableOpacity>
+        <View style={styles.headerTitleWrapper}>
+          {showSearch ? (
+            <TextInput
+              style={styles.headerSearchInput}
+              placeholder="Search favorites..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoFocus
+            />
+          ) : (
+            <Text style={styles.headerTitle}>Favorites</Text>
+          )}
+        </View>
+        <TouchableOpacity style={styles.headerIcon} onPress={() => router.push('/(stack)/cart')}>
+          <Ionicons name="cart-outline" size={28} color="#003459" />
+        </TouchableOpacity>
+      </View>
       <View style={styles.content}>
         <FlatList
-          data={pets}
+          data={filteredPets}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           contentContainerStyle={{ paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={<Text>No favorites found.</Text>}
         />
-
         <AppButton title="Add all to My Cart" onPress={handleAddAllToCart} href={''} />
       </View>
     </SafeAreaView>
@@ -107,6 +131,35 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     paddingVertical: 24
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  headerIcon: {
+    padding: 8,
+  },
+  headerTitleWrapper: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#003459',
+  },
+  headerSearchInput: {
+    fontSize: 20,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    width: '100%',
+    color: '#003459',
   },
   content: { padding: 16 },
   card: {

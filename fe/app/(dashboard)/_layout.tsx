@@ -51,7 +51,7 @@ export default function RootLayout() {
             <Ionicons
               name={focused ? 'home' : 'home-outline'}
               size={24}
-              color={focused ? '#003459' : '#888'}
+              color={focused ? '#FAD69C' : '#888'}
             />
           ),
         }}
@@ -63,7 +63,19 @@ export default function RootLayout() {
             <Ionicons
               name={focused ? 'bookmark' : 'bookmark-outline'}
               size={24}
-              color={focused ? '#003459' : '#888'}
+              color={focused ? '#FAD69C' : '#888'}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="chatlist"
+        options={{
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? 'chatbubbles' : 'chatbubbles-outline'}
+              size={24}
+              color={focused ? '#FAD69C' : '#888'}
             />
           ),
         }}
@@ -75,7 +87,19 @@ export default function RootLayout() {
             <Ionicons
               name={focused ? 'notifications' : 'notifications-outline'}
               size={24}
-              color={focused ? '#003459' : '#888'}
+              color={focused ? '#FAD69C' : '#888'}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="manage"
+        options={{
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? 'settings' : 'settings-outline'}
+              size={24}
+              color={focused ? '#FAD69C' : '#888'}
             />
           ),
         }}
@@ -87,7 +111,7 @@ export default function RootLayout() {
             <Ionicons
               name={focused ? 'person' : 'person-outline'}
               size={24}
-              color={focused ? '#003459' : '#888'}
+              color={focused ? '#FAD69C' : '#888'}
             />
           ),
         }}
@@ -115,6 +139,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   activeTab: {
-    backgroundColor: 'rgba(0, 52, 89, 0.1)', // soft highlight background for active tab
+    backgroundColor: '#FAD69C44', // soft orange highlight for active tab
   },
 });

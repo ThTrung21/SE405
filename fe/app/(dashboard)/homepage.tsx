@@ -186,6 +186,10 @@ export default function Homepage() {
   };
   const router = useRouter();
 
+  const filteredPets = pets.filter(pet => 
+    pet.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -299,6 +303,62 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     paddingVertical: 24,
   },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    marginBottom: 12,
+    minHeight: 40,
+  },
+  exploreTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#003459',
+    textAlign: 'center',
+    flex: 1,
+    fontFamily: 'System',
+  },
+  cartIcon: {
+    position: 'absolute',
+    right: 24,
+    top: 0,
+    padding: 4,
+    zIndex: 2,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    height: 52,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 18,
+    color: '#333',
+    fontWeight: '500',
+    fontFamily: 'System',
+  },
+  bannerContainer: {
+    marginHorizontal: 16,
+    marginBottom: 8,
+    borderRadius: 16,
+    overflow: 'hidden',
+    elevation: 2,
+    backgroundColor: '#fff',
+  },
+  bannerImage: {
+    width: '100%',
+    height: 120,
+    borderRadius: 16,
+  },
   categoriesContainer: {
     paddingHorizontal: 16,
     paddingVertical: 16,
@@ -342,7 +402,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#f1f1f1",
     padding: 12,
     borderRadius: 14,
-    marginBottom: 6,
   },
   activeIconWrapper: {
     backgroundColor: "#FAD69C", // light yellow
@@ -367,8 +426,11 @@ const styles = StyleSheet.create({
   image: {
     width: "100%",
     height: 200,
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+  cardContent: {
+    padding: 12,
   },
   petName: {
     fontSize: 13,

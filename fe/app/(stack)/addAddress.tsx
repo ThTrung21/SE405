@@ -16,9 +16,6 @@ type FormState = {
   fullName: string;
   address: string;
   zipcode: string;
-  country: string;
-  city: string;
-  district: string;
 };
 
 const AddShippingAddress: React.FC = () => {
@@ -26,9 +23,6 @@ const AddShippingAddress: React.FC = () => {
     fullName: '',
     address: '',
     zipcode: '',
-    country: '',
-    city: '',
-    district: '',
   });
 
   const handleChange = (key: keyof FormState, value: string) => {
@@ -58,25 +52,7 @@ const AddShippingAddress: React.FC = () => {
             value={form.zipcode}
             onChangeText={(text) => handleChange('zipcode', text)}
           />
-          <TouchableOpacity style={styles.dropdown}>
-            <Text style={styles.dropdownText}>
-              {form.country || 'Select Country'}
-            </Text>
-            <Ionicons name="chevron-down" size={20} color="#666" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.dropdown}>
-            <Text style={styles.dropdownText}>
-              {form.city || 'Select City'}
-            </Text>
-            <Ionicons name="chevron-down" size={20} color="#666" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.dropdown}>
-            <Text style={styles.dropdownText}>
-              {form.district || 'Select District'}
-            </Text>
-            <Ionicons name="chevron-down" size={20} color="#666" />
-          </TouchableOpacity>
-          <AppButton title="sAVE ADDRESS" onPress={() => console.log('SaveAddress pressed')} />
+          <AppButton title="SAVE ADDRESS" onPress={() => console.log('SaveAddress pressed')} />
         </ScrollView>
       </View>
     </SafeAreaView>
@@ -108,21 +84,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: '#ddd',
-  },
-  dropdown: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 14,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  dropdownText: {
-    fontSize: 16,
-    color: '#444',
   },
   button: {
     backgroundColor: '#002f5f',
