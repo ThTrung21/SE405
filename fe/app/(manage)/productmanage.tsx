@@ -252,7 +252,7 @@ export default function ProductManage() {
     openEdit(item);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: any) => {
     setIsLoading(true);
     try {
       await deleteProductById(Number(id));
@@ -308,12 +308,8 @@ export default function ProductManage() {
 
   const handleSave = async () => {
     setIsLoading(true);
-    console.log("start");
-    console.log("AAAA: ", form.images);
-
     if (editMode && editProductId) {
       let payload: any = {
-        productId: Number(editProductId),
         name: form.name,
         desc: form.description,
         price: Number(form.price),
@@ -323,7 +319,7 @@ export default function ProductManage() {
         await updateProductById(Number(editProductId), payload);
         Toast.show({
           type: "success",
-          text1: "Create new product successfully!",
+          text1: "Edit product successfully!",
           visibilityTime: 1000,
         });
         const productData = await getAllProducts();
@@ -517,7 +513,9 @@ export default function ProductManage() {
               <View>
                 <Image source={{ uri: item.images[0] }} style={styles.image} />
               </View>
-              <Text style={styles.petName}>{item.name}</Text>
+              <Text style={styles.petName}>
+                {item.name} ({item.stock})
+              </Text>
               <Text style={styles.petPrice}>${item.price}</Text>
             </TouchableOpacity>
           </View>
@@ -746,7 +744,7 @@ export default function ProductManage() {
                       onPress={handleAddBrand}
                     >
                       <Text style={{ color: "#fff", fontWeight: "bold" }}>
-                        {editMode ? "Edit" : "Add"}
+                        Add
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -792,7 +790,9 @@ export default function ProductManage() {
                   editMode && editProductId ? { marginLeft: 16 } : null,
                 ]}
               >
-                <Text style={{ color: "#fff", fontWeight: "bold" }}>Add</Text>
+                <Text style={{ color: "#fff", fontWeight: "bold" }}>
+                  {editMode ? "Edit" : "Add"}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>

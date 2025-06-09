@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+"use client";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -10,74 +11,74 @@ import {
   Dimensions,
   ListRenderItemInfo,
   TextInput,
-} from 'react-native';
-import { Feather, Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+} from "react-native";
+import { Feather, Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
-import AppButton from '../../components/appButton';
-
-type Pet = {
-  id: string;
-  name: string;
-  price: number;
-  image: string;
-};
-
-const initialPets: Pet[] = [
-  { id: '1', name: 'Poodle Tiny Dairy Cow', price: 50.0, image: 'https://placedog.net/300/200?id=1' },
-  { id: '2', name: 'Alaskan Malamute Grey', price: 20.0, image: 'https://placedog.net/300/200?id=2' },
-  { id: '3', name: 'Pomeranian White', price: 25.0, image: 'https://placedog.net/300/200?id=3' },
-  { id: '4', name: 'Pembroke Corgi Cream', price: 50.0, image: 'https://placedog.net/300/200?id=4' },
-  { id: '5', name: 'Alaskan Malamute Grey', price: 12.0, image: 'https://placedog.net/300/200?id=5' },
-];
+import AppButton from "../../components/appButton";
+import { useAuthStore } from "stores/useAuthStore";
+import { useAppStore } from "stores/useAppStore";
+import { useProductStore } from "stores/useProductStore";
+import { getAllProducts } from "apis/product.api";
+import { IProduct } from "interfaces/IProduct";
 
 const FavoritesScreen: React.FC = () => {
-  const [pets, setPets] = useState<Pet[]>(initialPets);
-  const [cart, setCart] = useState<Pet[]>([]);
   const [showSearch, setShowSearch] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   const router = useRouter();
+  //////////////////////////////////////////////////////////////
+  const profile = useAuthStore((state) => state.profile);
+  const isLoading = useAppStore((state) => state.isLoading);
+  const setIsLoading = useAppStore((state) => state.setIsLoading);
+  const setFilteredProducts = useProductStore(
+    (state) => state.setFilteredProducts
+  );
+  const setProducts = useProductStore((state) => state.setProducts);
+  const products = useProductStore((state) => state.products);
 
+  //-========================================
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        console.log("Fetching products...");
+        const productData = await getAllProducts();
+        setProducts(productData.data);
+        console.log("Products: \n", products);
+      } catch (error) {
+        console.error("Fetch error:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
   // Remove pet from favorites
   const handleRemove = (id: string) => {
-    setPets((prev) => prev.filter((pet) => pet.id !== id));
+    // setPets((prev) => prev.filter((pet) => pet.id !== id));
   };
 
-  // Add pet to cart (if not already added)
-  const handleAddToCart = (pet: Pet) => {
-    setCart((prev) => {
-      if (prev.find((p) => p.id === pet.id)) return prev; // already in cart
-      return [...prev, pet];
-    });
-  };
+  const filteredPets = products.filter((pet) =>
+    pet.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  // Add all pets to cart
-  const handleAddAllToCart = () => {
-    setCart((prev) => {
-      const newPets = pets.filter((p) => !prev.find((cp) => cp.id === p.id));
-      return [...prev, ...newPets];
-    });
-    router.push('/cart');
-  };
-
-  const filteredPets = pets.filter(pet => pet.name.toLowerCase().includes(searchQuery.toLowerCase()));
-
-  const renderItem = ({ item }: ListRenderItemInfo<Pet>) => (
+  const renderItem = ({ item }: ListRenderItemInfo<IProduct>) => (
     <View style={styles.card}>
-      <Image source={{ uri: item.image }} style={styles.image} />
+      <Image source={{ uri: item.images[0] }} style={styles.image} />
 
       <View style={styles.info}>
         <Text style={styles.name}>{item.name}</Text>
-        <Text style={styles.price}>${item.price.toFixed(2)}</Text>
+        <Text style={styles.price}>${item.price}</Text>
       </View>
 
       <View style={styles.actions}>
-        <TouchableOpacity style={styles.iconButton} onPress={() => handleRemove(item.id)}>
+        <TouchableOpacity
+          style={styles.iconButton}
+          onPress={() => handleRemove(item.id.toString())}
+        >
           <Feather name="x-circle" size={18} color="#000" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.iconButton} onPress={() => handleAddToCart(item)}>
-          <Ionicons name="bag" size={18} color="#000" />
         </TouchableOpacity>
       </View>
     </View>
@@ -87,7 +88,10 @@ const FavoritesScreen: React.FC = () => {
     <SafeAreaView style={styles.container}>
       {/* Header with Search and Cart */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.headerIcon} onPress={() => setShowSearch((prev) => !prev)}>
+        <TouchableOpacity
+          style={styles.headerIcon}
+          onPress={() => setShowSearch((prev) => !prev)}
+        >
           <Ionicons name="search" size={28} color="#003459" />
         </TouchableOpacity>
         <View style={styles.headerTitleWrapper}>
@@ -103,20 +107,22 @@ const FavoritesScreen: React.FC = () => {
             <Text style={styles.headerTitle}>Favorites</Text>
           )}
         </View>
-        <TouchableOpacity style={styles.headerIcon} onPress={() => router.push('/(stack)/cart')}>
+        <TouchableOpacity
+          style={styles.headerIcon}
+          onPress={() => router.push("/(stack)/cart")}
+        >
           <Ionicons name="cart-outline" size={28} color="#003459" />
         </TouchableOpacity>
       </View>
       <View style={styles.content}>
         <FlatList
-          data={filteredPets}
-          keyExtractor={(item) => item.id}
+          data={products}
+          keyExtractor={(item) => item.id.toString()}
           renderItem={renderItem}
           contentContainerStyle={{ paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={<Text>No favorites found.</Text>}
         />
-        <AppButton title="Add all to My Cart" onPress={handleAddAllToCart} href={''} />
       </View>
     </SafeAreaView>
   );
@@ -124,18 +130,18 @@ const FavoritesScreen: React.FC = () => {
 
 export default FavoritesScreen;
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    paddingVertical: 24
+    backgroundColor: "#fff",
+    paddingVertical: 24,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     marginBottom: 16,
   },
@@ -144,29 +150,29 @@ const styles = StyleSheet.create({
   },
   headerTitleWrapper: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   headerTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#003459',
+    fontWeight: "bold",
+    color: "#003459",
   },
   headerSearchInput: {
     fontSize: 20,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 4,
-    width: '100%',
-    color: '#003459',
+    width: "100%",
+    color: "#003459",
   },
   content: { padding: 16 },
   card: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 16,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     padding: 10,
     borderRadius: 12,
     elevation: 1,
@@ -179,20 +185,20 @@ const styles = StyleSheet.create({
   },
   info: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   name: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     fontSize: 14,
     marginBottom: 4,
   },
   price: {
-    color: '#333',
+    color: "#333",
     fontSize: 13,
   },
   actions: {
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    justifyContent: "space-between",
+    alignItems: "center",
     gap: 8,
   },
   iconButton: {

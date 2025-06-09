@@ -1,40 +1,59 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Image,
+} from "react-native";
+import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { useAuthStore } from "stores/useAuthStore";
+import { useAppStore } from "stores/useAppStore";
+import ConversationScreen from "app/chat/conversations";
 
 // Mock data for chat list
 const chatList = [
   {
-    id: '1',
-    productName: 'Alaskan Malamute Grey',
-    lastMessage: 'Xin chào! Bạn cần tư vấn gì?',
-    time: '10:30 AM',
-    productImage: require('../../assets/dog1.png'),
+    id: "1",
+    productName: "Alaskan Malamute Grey",
+    lastMessage: "Xin chào! Bạn cần tư vấn gì?",
+    time: "10:30 AM",
+    productImage: require("../../assets/dog1.png"),
   },
   {
-    id: '2',
-    productName: 'Poodle Tiny Dairy Cow',
-    lastMessage: 'Cảm ơn bạn đã quan tâm!',
-    time: 'Yesterday',
-    productImage: require('../../assets/dog2.png'),
+    id: "2",
+    productName: "Poodle Tiny Dairy Cow",
+    lastMessage: "Cảm ơn bạn đã quan tâm!",
+    time: "Yesterday",
+    productImage: require("../../assets/dog2.png"),
   },
   {
-    id: '3',
-    productName: 'Pomeranian White',
-    lastMessage: 'Sản phẩm còn hàng không?',
-    time: '2 days ago',
-    productImage: require('../../assets/dog3.png'),
+    id: "3",
+    productName: "Pomeranian White",
+    lastMessage: "Sản phẩm còn hàng không?",
+    time: "2 days ago",
+    productImage: require("../../assets/dog3.png"),
   },
 ];
 
 export default function ChatListScreen() {
   const router = useRouter();
+  const profile = useAuthStore((state) => state.profile);
+  const isLoading = useAppStore((state) => state.isLoading);
+  const setIsLoading = useAppStore((state) => state.setIsLoading);
+  const [currentTole, setCurrentRole] = useState("");
+  useEffect(() => {
+    if (profile) setCurrentRole(profile?.role.toString());
+  }, []);
 
   const renderChatItem = ({ item }: any) => (
     <TouchableOpacity
       style={styles.chatItem}
-      onPress={() => router.push({ pathname: '/chat', params: { id: item.id } })}
+      onPress={() =>
+        router.push({ pathname: "/chat", params: { id: item.id } })
+      }
     >
       <Image source={item.productImage} style={styles.productImage} />
       <View style={styles.chatInfo}>
@@ -51,15 +70,11 @@ export default function ChatListScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Chats</Text>
-      </View>
-      <FlatList
-        data={chatList}
-        renderItem={renderChatItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
-      />
+      {currentTole !== "CUSTOMER" ? (
+        // <ConversationScreen conversations={} />
+      ) : (
+        <></>
+      )}
     </View>
   );
 }
@@ -67,32 +82,32 @@ export default function ChatListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: "#f9f9f9",
   },
   header: {
     height: 60,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: "#eee",
   },
   headerTitle: {
     fontSize: 22,
-    fontWeight: 'bold',
-    color: '#003459',
+    fontWeight: "bold",
+    color: "#003459",
   },
   listContainer: {
     padding: 16,
   },
   chatItem: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
+    flexDirection: "row",
+    backgroundColor: "#fff",
     padding: 12,
     borderRadius: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: "#eee",
   },
   productImage: {
     width: 50,
@@ -104,22 +119,22 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   chatHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 4,
   },
   productName: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#003459',
+    fontWeight: "600",
+    color: "#003459",
   },
   time: {
     fontSize: 12,
-    color: '#666',
+    color: "#666",
   },
   lastMessage: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
   },
-}); 
+});
