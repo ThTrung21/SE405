@@ -142,6 +142,7 @@ export default function Homepage() {
   ///search
   const handleSearchProduct = async () => {
     setIsLoading(true);
+    setSelectedCategoryIndex(0);
     try {
       if (searchValue && searchValue !== "") {
         const { data } = await searchProductsByName(searchValue);
@@ -202,8 +203,6 @@ export default function Homepage() {
         />
       </View>
       <View style={{ height: 120 }}>
-        {/*Search box  */}
-
         {/* Categories */}
         <ScrollView
           horizontal
@@ -355,32 +354,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     flexDirection: "row",
   },
-  // searchContainer: {
-  //   height: 40,
-  //   flexDirection: "row",
-  //   alignItems: "center",
-  //   backgroundColor: "#f1f1f1",
-  //   marginHorizontal: 16,
-  //   borderRadius: 20,
-  //   paddingHorizontal: 12,
-  //   paddingVertical: 8,
-  //   marginBottom: 12,
-  // },
-  // searchIcon: {
-  //   marginRight: 8,
-  // },
-  // searchInput: {
-  //   flex: 1,
-  //   borderWidth: 0,
-  //   fontSize: 14,
 
-  //   color: "#000",
-  // },
-  // scrollContainer: {
-  //   // Enable touch-action for horizontal pan dragging on web
-  //   touchAction: "pan-x",
-  //   cursor: "grab" as any,
-  // },
   mainheader: {
     backgroundColor: "red",
   },

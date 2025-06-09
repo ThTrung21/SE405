@@ -25,7 +25,7 @@ import Toast from "react-native-toast-message";
 import { executeMutation } from "firebase/data-connect";
 import { Role } from "constants/role";
 const defaultAvatar = require("../../assets/avatar-default.png");
-const uriToBlob = async (uri: string): Promise<Blob> => {
+export const uriToBlob = async (uri: string): Promise<Blob> => {
   const response = await fetch(uri);
   const blob = await response.blob();
   return blob;

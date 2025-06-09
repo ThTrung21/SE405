@@ -11,83 +11,45 @@ import {
   ScrollView,
   Image,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import {
+  Ionicons,
+  MaterialCommunityIcons,
+  MaterialIcons,
+} from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import Header from "../../components/header";
-import DropDownPicker from "react-native-dropdown-picker";
+import DropDownPicker, { ItemType } from "react-native-dropdown-picker";
 import Colors from "../../constants/Colors";
 import { SubManagementHeader } from "components/managementHeader";
+import { categories } from "app/(dashboard)/homepage";
+import { useAppStore } from "stores/useAppStore";
+import {
+  createNewProduct,
+  getAllProducts,
+  getFilteredProduct,
+  searchProductsByName,
+} from "apis/product.api";
+import { getAllBrands } from "apis/brand.api";
+import { router } from "expo-router";
+import { useProductStore } from "stores/useProductStore";
+import { useBrandStore } from "stores/useBrandStore";
+import { IProduct } from "interfaces/IProduct";
+import { IBrand } from "interfaces/IBrand";
+import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 
-const categories = [
-  { key: "all", label: "Popular", icon: "star" },
-  { key: "pets", label: "Pets", icon: "paw" },
-  { key: "proteine", label: "Proteine", icon: "restaurant" },
-  { key: "biscuit", label: "Biscuit", icon: "pizza" },
-  { key: "small", label: "Small", icon: "resize" },
-  { key: "large", label: "Large", icon: "resize-outline" },
-];
-
-const initialBrands = ["PetBrand", "Doggy", "Catty"];
-
-type Product = {
-  id: string;
-  name: string;
-  price: number;
-  images: any[];
-  category: string;
-  description: string;
-  brand: string;
-  stock: number;
-};
-
-const initialProducts: Product[] = [
-  {
-    id: "1",
-    name: "Alaskan Malamute Grey",
-    price: 12,
-    images: [require("../../assets/dog1.png")],
-    category: "pets",
-    description: "",
-    brand: "PetBrand",
-    stock: 10,
-  },
-  {
-    id: "2",
-    name: "Poodle Tiny Dairy Cow",
-    price: 25,
-    images: [require("../../assets/dog2.png")],
-    category: "pets",
-    description: "",
-    brand: "Doggy",
-    stock: 5,
-  },
-  {
-    id: "3",
-    name: "Pomeranian White",
-    price: 20,
-    images: [require("../../assets/dog3.png")],
-    category: "small",
-    description: "",
-    brand: "Catty",
-    stock: 8,
-  },
-  {
-    id: "4",
-    name: "Pomeranian White",
-    price: 50,
-    images: [require("../../assets/dog4.png")],
-    category: "large",
-    description: "",
-    brand: "PetBrand",
-    stock: 2,
-  },
-];
+import { uriToBlob } from "app/(dashboard)/profile";
+import { app } from "utils/firebase";
+import Toast from "react-native-toast-message";
 
 export default function ProductManage() {
-  const [products, setProducts] = useState<Product[]>(initialProducts);
-  const [brands, setBrands] = useState(initialBrands);
-  const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  //initial store
+  const products = useProductStore((state) => state.products);
+  const setProducts = useProductStore((state) => state.setProducts);
+  //search and filter
+  const [searchValue, setSearchValue] = useState("");
+  const [selectedCategoryIndex, setSelectedCategoryIndex] = useState<number>(0);
+
+  //modal
   const [modalVisible, setModalVisible] = useState(false);
   const [form, setForm] = useState<{
     name: string;
@@ -106,38 +68,126 @@ export default function ProductManage() {
     brand: "",
     stock: "1",
   });
-  const [showBrandInput, setShowBrandInput] = useState(false);
-  const [newBrand, setNewBrand] = useState("");
+
   const [categoryOpen, setCategoryOpen] = useState(false);
-  const [categoryValue, setCategoryValue] = useState<string | null>(null);
-  const [categoryItems, setCategoryItems] = useState([
-    { label: "Pets", value: "pets" },
-    { label: "Proteine", value: "proteine" },
-    { label: "Biscuit", value: "biscuit" },
-    { label: "Small", value: "small" },
-    { label: "Large", value: "large" },
-  ]);
   const [brandOpen, setBrandOpen] = useState(false);
-  const [brandValue, setBrandValue] = useState<string | null>(null);
-  const [brandItems, setBrandItems] = useState<
-    { label: string; value: string }[]
-  >(
-    brands
-      .map((b) => ({ label: b, value: b }))
-      .concat([{ label: "+ Add new brand", value: "__add_new__" }])
-  );
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  // const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editProductId, setEditProductId] = useState<string | null>(null);
+  const isLoading = useAppStore((state) => state.isLoading);
+  const setIsLoading = useAppStore((state) => state.setIsLoading);
 
-  const filteredProducts = products.filter((p) => {
-    const matchCategory =
-      selectedCategory === "all" || p.category === selectedCategory;
-    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
-    return matchCategory && matchSearch;
-  });
+  //search product by name
+  const handleSearchProduct = async () => {
+    setSelectedCategoryIndex(0);
+    setIsLoading(true);
+    try {
+      if (searchValue && searchValue !== "") {
+        const { data } = await searchProductsByName(searchValue);
+        setProducts(data);
+      } else {
+        const { data } = await getAllProducts();
+        setProducts(data);
+      }
+      setIsLoading(false);
+    } catch (error) {
+      setIsLoading(false);
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  //filter product
+  const handleFilterProduct = async (categoryId: number, index: number) => {
+    setSelectedCategoryIndex(index);
+    setIsLoading(true);
+    try {
+      let filtered;
+      if (categoryId != 0) filtered = await getFilteredProduct(categoryId);
+      else filtered = await getAllProducts();
+      setProducts(filtered.data);
+    } catch (error) {
+      setIsLoading(false);
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  ///////////////////categories//////////////////////////////////////////
+
+  const categoryOptions = categories.slice(1).map((cat) => ({
+    label: cat.label,
+    value: cat.idnumber.toString(), // DropDownPicker expects value to be a string
+  }));
+  const [categoryValue, setCategoryValue] = useState<string | null>(null);
+  const selectedCategory = categories.find(
+    (cat) => cat.idnumber.toString() === categoryValue
+  );
+  ///////////////////////////
+  //
+  //
+  //
+  /////////brands////////////
+  interface DropdownItem {
+    label: string;
+    value: string;
+  }
+  const brands = useBrandStore((state) => state.brands); // official brands from store
+  const setBrands = useBrandStore((state) => state.setBrands);
+
+  const initialBrandItems: DropdownItem[] = [
+    ...brands.map((b) => ({ label: b.name, value: b.id.toString() })),
+    { label: "+ Add new brand", value: "__add_new__" },
+  ];
+
+  const [brandItems, setBrandItems] = useState(initialBrandItems);
+  const [brandValue, setBrandValue] = useState<string | null>(null);
+  const [newBrand, setNewBrand] = useState("");
+  const [showBrandInput, setShowBrandInput] = useState(false);
+  const [newBrands, setNewBrands] = useState<IBrand[]>([]);
+  useEffect(() => {
+    setBrandItems([
+      ...brands.map((b) => ({ label: b.name, value: b.id.toString() })),
+      { label: "+ Add new brand", value: "__add_new__" },
+    ]);
+  }, [brands]);
+  const handleAddBrand = () => {
+    const trimmed = newBrand.trim();
+    if (
+      trimmed &&
+      !brandItems.find((i) => i.label.toLowerCase() === trimmed.toLowerCase())
+    ) {
+      const tempId = Date.now(); // Temporary numeric ID
+      const newBrandItem: IBrand = { id: tempId, name: trimmed }; // Create new brand object
+
+      // Add to local newBrands state
+      setNewBrands((prev) => [...prev, newBrandItem]);
+
+      // Update brandItems for the dropdown
+      setBrandItems((items) => [
+        ...items.filter((i) => i.value !== "__add_new__"),
+        { label: trimmed, value: tempId.toString() }, // Convert tempId to string
+        { label: "+ Add new brand", value: "__add_new__" },
+      ]);
+
+      // Update the store (optional, if you want to persist immediately)
+      setBrands([...brands, newBrandItem]);
+
+      // Update form and reset inputs
+      setBrandValue(tempId.toString()); // Convert to string for dropdown
+      setForm((f) => ({ ...f, brand: trimmed }));
+      setShowBrandInput(false);
+      setNewBrand("");
+    }
+  };
+
+  //////////////////
+  //
+  //
+  //
   const openAdd = () => {
     setForm({
       name: "",
@@ -157,53 +207,53 @@ export default function ProductManage() {
     setModalVisible(true);
   };
 
-  const openDetail = (item: Product) => {
-    setSelectedProduct(item);
+  const openDetail = (item: IProduct) => {
+    // setSelectedProduct(item);
     setDetailModalVisible(true);
   };
 
-  const openEdit = (item: Product) => {
-    setForm({
-      name: item.name,
-      price: item.price.toString(),
-      description: item.description,
-      images: item.images,
-      category: item.category,
-      brand: item.brand,
-      stock: item.stock?.toString() || "1",
-    });
-    setCategoryValue(item.category);
-    setBrandValue(item.brand);
-    setEditMode(true);
-    setEditProductId(item.id);
-    setModalVisible(true);
-    setDetailModalVisible(false);
-  };
+  // const openEdit = (item: IProduct) => {
+  //   setForm({
+  //     name: item.name,
+  //     price: item.price.toString(),
+  //     description: item.description,
+  //     images: item.images,
+  //     category: item.category,
+  //     brand: item.brand,
+  //     stock: item.stock?.toString() || "1",
+  //   });
+  //   setCategoryValue(item.category);
+  //   setBrandValue(item.brand);
+  //   setEditMode(true);
+  //   setEditProductId(item.id);
+  //   setModalVisible(true);
+  //   setDetailModalVisible(false);
+  // };
 
-  const openItemEdit = (item: Product) => {
-    openEdit(item);
-  };
+  // const openItemEdit = (item: IProduct) => {
+  //   openEdit(item);
+  // };
 
-  const handleDelete = (id: string) => {
-    Alert.alert(
-      "Delete Product",
-      "Are you sure you want to delete this product?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            setProducts((products) => products.filter((p) => p.id !== id));
-            setModalVisible(false);
-            setEditMode(false);
-            setEditProductId(null);
-            setDetailModalVisible(false);
-          },
-        },
-      ]
-    );
-  };
+  // const handleDelete = (id: string) => {
+  //   Alert.alert(
+  //     "Delete Product",
+  //     "Are you sure you want to delete this product?",
+  //     [
+  //       { text: "Cancel", style: "cancel" },
+  //       {
+  //         text: "Delete",
+  //         style: "destructive",
+  //         onPress: () => {
+  //           setProducts((products) => products.filter((p) => p.id !== id));
+  //           setModalVisible(false);
+  //           setEditMode(false);
+  //           setEditProductId(null);
+  //           setDetailModalVisible(false);
+  //         },
+  //       },
+  //     ]
+  //   );
+  // };
 
   const pickImages = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -231,169 +281,215 @@ export default function ProductManage() {
     }));
   };
 
-  const handleSave = () => {
-    if (
-      !form.name ||
-      !form.price ||
-      !form.category ||
-      !form.brand ||
-      form.images.length === 0
-    ) {
-      Alert.alert(
-        "Error",
-        "Please fill all fields and select at least one image!"
-      );
-      return;
-    }
+  const handleSave = async () => {
+    setIsLoading(true);
+    console.log("start");
+    console.log("AAAA: ", form.images);
+
     if (editMode && editProductId) {
-      setProducts(
-        products.map((p) =>
-          p.id === editProductId
-            ? {
-                ...p,
-                name: form.name,
-                price: parseFloat(form.price),
-                images: form.images,
-                category: form.category,
-                description: form.description,
-                brand: form.brand,
-                stock: parseInt(form.stock) || 0,
-              }
-            : p
-        )
-      );
-    } else {
-      setProducts([
-        ...products,
-        {
-          id: (Math.random() * 100000).toFixed(0),
-          name: form.name,
-          price: parseFloat(form.price),
-          images: form.images,
-          category: form.category,
-          description: form.description,
-          brand: form.brand,
-          stock: parseInt(form.stock) || 0,
-        },
-      ]);
+      // setProducts(
+      //   products.map((p) =>
+      //     p.id === editProductId
+      //       ? {
+      //           ...p,
+      //           name: form.name,
+      //           price: parseFloat(form.price),
+      //           images: form.images,
+      //           category: form.category,
+      //           description: form.description,
+      //           brand: form.brand,
+      //           stock: parseInt(form.stock) || 0,
+      //         }
+      //       : p
+      //   )
+      // );
     }
+    //add
+    else {
+      let payload: any = {
+        name: form.name,
+        desc: form.description,
+        price: Number(form.price),
+        brandId: Number(brandValue),
+        categoryId: Number(categoryValue),
+
+        importPrice: 0,
+        stock: Number(form.stock),
+        score: 0,
+      };
+      console.log(payload);
+      try {
+        if (form.images && form.images.length > 0) {
+          const storage = getStorage(app);
+          const uploadedUrls: string[] = [];
+
+          for (const img of form.images) {
+            const blob = await uriToBlob(img.uri);
+            const filename = img.uri.split("/").pop();
+            const storageRef = ref(
+              storage,
+              `petshop/gallery/${Date.now()}_${filename}`
+            );
+
+            await uploadBytes(storageRef, blob);
+            const downloadURL = await getDownloadURL(storageRef);
+            uploadedUrls.push(downloadURL);
+          }
+
+          payload = { ...payload, images: uploadedUrls }; // attach the image URLs
+        }
+        await createNewProduct(payload);
+        Toast.show({
+          type: "success",
+          text1: "Create new product successfully!",
+          visibilityTime: 1000,
+        });
+      } catch (err) {
+        console.error("Error uploading images", err);
+        Toast.show({
+          type: "error",
+          text1: "Error. Something went wrong",
+          visibilityTime: 3000,
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    setIsLoading(false);
     setModalVisible(false);
     setEditMode(false);
     setEditProductId(null);
-  };
-
-  const handleAddBrand = () => {
-    if (newBrand.trim() && !brands.includes(newBrand.trim())) {
-      setBrands([...brands, newBrand.trim()]);
-      setBrandItems((items) => [
-        ...items.filter((i) => i.value !== "__add_new__"),
-        { label: newBrand.trim(), value: newBrand.trim() },
-        { label: "+ Add new brand", value: "__add_new__" },
-      ]);
-      setBrandValue(newBrand.trim());
-      setForm((f) => ({ ...f, brand: newBrand.trim() }));
-      setShowBrandInput(false);
-      setNewBrand("");
-    }
   };
 
   useEffect(() => {
     setForm((f) => ({ ...f, category: categoryValue || "" }));
   }, [categoryValue]);
 
+  // useEffect(() => {
+  //   if (brandValue === "__add_new__") {
+  //     setShowBrandInput(true);
+  //   } else {
+  //     setForm((f) => ({ ...f, brand: brandValue || "" }));
+  //     setShowBrandInput(false);
+  //   }
+  // }, [brandValue]);
   useEffect(() => {
-    if (brandValue === "__add_new__") {
-      setShowBrandInput(true);
-    } else {
-      setForm((f) => ({ ...f, brand: brandValue || "" }));
-      setShowBrandInput(false);
-    }
-  }, [brandValue]);
+    (async () => {
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        alert("Permission to access media library is required!");
+      }
+    })();
 
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const productData = await getAllProducts();
+        const brandData = await getAllBrands();
+        setProducts(productData.data);
+        setBrands(brandData.data);
+        console.log(brands);
+      } catch (error) {
+        console.error("Fetch error:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
   return (
     <View style={styles.container}>
       <SubManagementHeader title="Manage Products" />
-      {/* Nút dấu cộng ở góc phải trên */}
+
       <TouchableOpacity style={styles.addBtn} onPress={openAdd}>
         <Ionicons name="add-circle" size={36} color="#003459" />
       </TouchableOpacity>
+
       {/* Search bar */}
-      <View style={styles.searchRow}>
-        <Ionicons
+      <View style={styles.searchContainer}>
+        <MaterialIcons
           name="search"
           size={20}
-          color="#888"
-          style={{ marginRight: 8 }}
+          color="#555"
+          style={styles.searchIcon}
         />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search products..."
-          value={search}
-          onChangeText={setSearch}
+          placeholder="Search..."
+          value={searchValue}
+          onChangeText={(text) => setSearchValue(text)}
+          placeholderTextColor="#888"
+          onSubmitEditing={handleSearchProduct}
         />
       </View>
       {/* Category filter */}
-      <View style={styles.categoryRow}>
-        <FlatList
-          data={categories}
+      <View style={{ height: 120 }}>
+        {/* Categories */}
+        <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          keyExtractor={(item) => item.key}
-          renderItem={({
-            item,
-          }: {
-            item: { key: string; label: string; icon: any };
-          }) => (
-            <TouchableOpacity
-              style={[
-                styles.categoryBtn,
-                selectedCategory === item.key && styles.categoryBtnActive,
-              ]}
-              onPress={() => setSelectedCategory(item.key)}
-            >
-              <Ionicons
-                name={item.icon as any}
-                size={20}
-                color={selectedCategory === item.key ? "#fff" : "#222"}
-              />
-              <Text
-                style={[
-                  styles.categoryLabel,
-                  selectedCategory === item.key && styles.activeCategoryLabel,
-                ]}
+          contentContainerStyle={styles.categoriesContainer}
+          scrollEnabled={true}
+        >
+          {categories.map((item, index) => {
+            const isActive = index === selectedCategoryIndex;
+            return (
+              <TouchableOpacity
+                key={index}
+                style={[styles.categoryItem]}
+                onPress={() => handleFilterProduct(item.idnumber, index)}
               >
-                {item.label}
-              </Text>
-            </TouchableOpacity>
-          )}
-        />
+                <View
+                  style={[
+                    styles.iconWrapper,
+                    isActive && styles.activeIconWrapper,
+                  ]}
+                >
+                  <MaterialCommunityIcons
+                    name={item.icon as any}
+                    size={28}
+                    color={isActive ? "#000" : "#555"}
+                  />
+                </View>
+                <Text
+                  style={[styles.categoryLabel, isActive && styles.activeLabel]}
+                >
+                  {item.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
       </View>
       {/* Product grid */}
       <FlatList
-        data={filteredProducts}
-        keyExtractor={(item) => item.id}
+        data={products}
+        keyExtractor={(item) => item.id.toString()}
         numColumns={2}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 80 }}
         columnWrapperStyle={{
           justifyContent: "space-between",
-          marginBottom: 18,
+          paddingHorizontal: 16,
         }}
-        contentContainerStyle={{ padding: 12, paddingBottom: 32 }}
-        renderItem={({ item }: { item: Product }) => (
-          <TouchableOpacity
-            style={styles.card}
-            onPress={() => openItemEdit(item)}
-          >
-            <Image source={item.images[0]} style={styles.cardImage} />
-            <Text style={styles.cardName}>{item.name}</Text>
-            <Text style={styles.cardPrice}>$ {item.price.toFixed(2)}</Text>
-          </TouchableOpacity>
+        renderItem={({ item }) => (
+          <View style={styles.card}>
+            <TouchableOpacity
+              style={{ flex: 1 }} // Make TouchableOpacity take up the whole card
+            >
+              <View>
+                <Image source={{ uri: item.images[0] }} style={styles.image} />
+              </View>
+              <Text style={styles.petName}>{item.name}</Text>
+              <Text style={styles.petPrice}>${item.price}</Text>
+            </TouchableOpacity>
+          </View>
         )}
-        ListEmptyComponent={
-          <Text style={{ textAlign: "center", marginTop: 40, color: "#888" }}>
-            No products.
-          </Text>
-        }
+        style={{ flex: 1 }}
       />
+
       {/* Modal Add Product */}
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
@@ -401,7 +497,7 @@ export default function ProductManage() {
             <Text style={styles.modalTitle}>
               {editMode ? "Edit Product" : "Add Product"}
             </Text>
-            <ScrollView>
+            <ScrollView showsVerticalScrollIndicator={false}>
               <View style={styles.imagePickerRow}>
                 {form.images.map((img, idx) => (
                   <View key={idx} style={styles.imageThumbWrap}>
@@ -422,12 +518,14 @@ export default function ProductManage() {
               <TextInput
                 style={styles.input}
                 placeholder="Product name"
+                placeholderTextColor="#999"
                 value={form.name}
                 onChangeText={(v) => setForm((f) => ({ ...f, name: v }))}
               />
               <TextInput
                 style={styles.input}
                 placeholder="Description"
+                placeholderTextColor="#999"
                 value={form.description}
                 onChangeText={(v) => setForm((f) => ({ ...f, description: v }))}
                 multiline
@@ -435,6 +533,7 @@ export default function ProductManage() {
               <TextInput
                 style={styles.input}
                 placeholder="Price"
+                placeholderTextColor="#999"
                 value={form.price}
                 onChangeText={(v) => setForm((f) => ({ ...f, price: v }))}
                 keyboardType="numeric"
@@ -484,17 +583,16 @@ export default function ProductManage() {
                 </TouchableOpacity>
               </View>
               {/* Dropdown category */}
-              <View style={styles.dropdownWrap}>
+              <View style={styles.dropdownWrap1}>
                 <Text style={{ fontWeight: "500", marginBottom: 4 }}>
                   Category
                 </Text>
                 <DropDownPicker
                   open={categoryOpen}
                   value={categoryValue}
-                  items={categoryItems}
+                  items={categoryOptions}
                   setOpen={setCategoryOpen}
                   setValue={setCategoryValue}
-                  setItems={setCategoryItems}
                   placeholder="Select category"
                   style={styles.input}
                   textStyle={{
@@ -506,15 +604,16 @@ export default function ProductManage() {
                     borderColor: "#E0E0E0",
                     borderRadius: 8,
                   }}
-                  zIndex={2000}
-                  zIndexInverse={1000}
+                  zIndex={10}
+                  // zIndexInverse={400}
                 />
               </View>
               {/* Dropdown brand */}
-              <View style={styles.dropdownWrap}>
+              <View style={styles.dropdownWrap2}>
                 <Text style={{ fontWeight: "500", marginBottom: 4 }}>
                   Brand
                 </Text>
+
                 <DropDownPicker
                   open={brandOpen}
                   value={brandValue}
@@ -523,6 +622,18 @@ export default function ProductManage() {
                   setValue={setBrandValue}
                   setItems={setBrandItems}
                   placeholder="Select brand"
+                  onChangeValue={(val) => {
+                    if (val === "__add_new__") {
+                      setShowBrandInput(true);
+                      setBrandValue(null); // optional: clear selection
+                    } else {
+                      setShowBrandInput(false);
+                      const selected = brandItems.find((b) => b.value === val);
+                      if (selected) {
+                        setForm((f) => ({ ...f, brand: selected.label }));
+                      }
+                    }
+                  }}
                   style={styles.input}
                   textStyle={{
                     fontWeight: "bold",
@@ -533,9 +644,11 @@ export default function ProductManage() {
                     borderColor: "#E0E0E0",
                     borderRadius: 8,
                   }}
-                  zIndex={1000}
-                  zIndexInverse={2000}
+                  zIndex={5}
+                  // zIndexInverse={2000}
                 />
+
+                {/* Show Input Field when "Add new brand" selected */}
                 {showBrandInput && (
                   <View
                     style={{
@@ -586,19 +699,7 @@ export default function ProductManage() {
                   Cancel
                 </Text>
               </TouchableOpacity>
-              {editMode && editProductId && (
-                <TouchableOpacity
-                  onPress={() => handleDelete(editProductId)}
-                  style={[
-                    styles.saveBtn,
-                    { backgroundColor: "#E57373", marginLeft: 8 },
-                  ]}
-                >
-                  <Text style={{ color: "#fff", fontWeight: "bold" }}>
-                    Delete
-                  </Text>
-                </TouchableOpacity>
-              )}
+
               <TouchableOpacity
                 onPress={handleSave}
                 style={[
@@ -606,16 +707,14 @@ export default function ProductManage() {
                   editMode && editProductId ? { marginLeft: 16 } : null,
                 ]}
               >
-                <Text style={{ color: "#fff", fontWeight: "bold" }}>
-                  {editMode ? "Edit" : "Add"}
-                </Text>
+                <Text style={{ color: "#fff", fontWeight: "bold" }}>Add</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
       {/* Modal chi tiết sản phẩm */}
-      <Modal visible={detailModalVisible} animationType="slide" transparent>
+      {/* <Modal visible={detailModalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>
             {selectedProduct && (
@@ -694,16 +793,12 @@ export default function ProductManage() {
             </View>
           </View>
         </View>
-      </Modal>
+      </Modal> */}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
   addBtn: {
     position: "absolute",
     top: 18,
@@ -723,12 +818,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    color: "#222",
-    fontWeight: "bold",
-  },
+  // searchInput: {
+  //   flex: 1,
+  //   fontSize: 16,
+  //   color: "#222",
+  //   fontWeight: "bold",
+  // },
   categoryRow: {
     flexDirection: "row",
     marginBottom: 12,
@@ -799,7 +894,8 @@ const styles = StyleSheet.create({
   modalBox: {
     backgroundColor: "#fff",
     borderRadius: 16,
-    padding: 24,
+    paddingHorizontal: 12,
+    paddingVertical: 24,
     width: "90%",
     maxHeight: "90%",
   },
@@ -813,7 +909,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E0E0E0",
     borderRadius: 8,
-    padding: 12,
+    padding: 16,
     fontSize: 16,
     marginBottom: 12,
     backgroundColor: "#F5F5F7",
@@ -870,8 +966,15 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
-  dropdownWrap: {
+  dropdownWrap1: {
     marginBottom: 12,
+    zIndex: 10,
+    position: "relative", // REQUIRED to apply zIndex in RN
+  },
+  dropdownWrap2: {
+    marginBottom: 12,
+    zIndex: 5,
+    position: "relative", // REQUIRED to apply zIndex in RN
   },
   cancelBtn: {
     paddingVertical: 10,
@@ -915,5 +1018,136 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
     textAlign: "center",
     padding: 0,
+  },
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+    paddingVertical: 24,
+  },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+    marginBottom: 12,
+    minHeight: 40,
+  },
+  exploreTitle: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#003459",
+    textAlign: "center",
+    flex: 1,
+    fontFamily: "System",
+  },
+  cartIcon: {
+    position: "absolute",
+    right: 24,
+    top: 0,
+    padding: 4,
+    zIndex: 2,
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    marginHorizontal: 16,
+    marginVertical: 12,
+    height: 52,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 18,
+    color: "#333",
+    fontWeight: "500",
+    fontFamily: "System",
+  },
+  bannerContainer: {
+    marginHorizontal: 16,
+    marginBottom: 8,
+    borderRadius: 16,
+    overflow: "hidden",
+    elevation: 2,
+    backgroundColor: "#fff",
+  },
+  bannerImage: {
+    width: "100%",
+    height: 120,
+    borderRadius: 16,
+  },
+  categoriesContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    flexDirection: "row",
+  },
+
+  mainheader: {
+    backgroundColor: "red",
+  },
+  categoryItem: {
+    alignItems: "center",
+    marginRight: 16,
+    minWidth: 80,
+  },
+  iconWrapper: {
+    backgroundColor: "#f1f1f1",
+    padding: 12,
+    borderRadius: 14,
+  },
+  activeIconWrapper: {
+    backgroundColor: "#FAD69C", // light yellow
+  },
+  // categoryLabel: {
+  //   fontSize: 12,
+  //   color: "#888",
+  //   fontWeight: "500",
+  // },
+  activeLabel: {
+    color: "#000",
+    fontWeight: "bold",
+  },
+  // card: {
+  //   width: "48%",
+  //   backgroundColor: "#fff",
+  //   borderRadius: 10,
+  //   marginBottom: 20,
+  //   overflow: "hidden",
+  //   position: "relative",
+  // },
+  image: {
+    width: "100%",
+    height: 200,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+  cardContent: {
+    padding: 12,
+  },
+  petName: {
+    fontSize: 13,
+    fontWeight: "500",
+    paddingHorizontal: 8,
+    marginTop: 6,
+  },
+  petPrice: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#003366",
+    paddingHorizontal: 8,
+    marginBottom: 8,
+  },
+  cartButton: {
+    position: "absolute",
+    bottom: 8,
+    right: 8,
+    backgroundColor: "#808080",
+    borderRadius: 6,
+    padding: 6,
+    opacity: 0.6,
   },
 });

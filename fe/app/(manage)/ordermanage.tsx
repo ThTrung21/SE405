@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   StyleSheet,
@@ -8,6 +8,7 @@ import {
   Modal,
   Alert,
   Image,
+  FlatList,
 } from "react-native";
 import Header from "../../components/header";
 import { Ionicons } from "@expo/vector-icons";
@@ -16,8 +17,10 @@ import { IOrder } from "interfaces/IOrder";
 import { useAppStore } from "stores/useAppStore";
 import { useOrdersStore } from "stores/useOrderStore";
 import { useAuthStore } from "stores/useAuthStore";
-
-type OrderStatus = "Pending" | "Delivering" | "Delivered" | "Cancelled";
+import { cancelOrder, changeOrderStatus, getAllOrders } from "apis/order.api";
+import Toast from "react-native-toast-message";
+import { OrderStatus } from "constants/status";
+// type OrderStatus = "Pending" | "Delivering" | "Delivered" | "Cancelled";
 
 export default function OrderManage() {
   const [selectedOrder, setSelectedOrder] = useState<IOrder | null>(null);
@@ -27,40 +30,95 @@ export default function OrderManage() {
   const orders = useOrdersStore((state) => state.orders);
   const setOrders = useOrdersStore((state) => state.setOrders);
   const profile = useAuthStore((state) => state.profile);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [confirmationVisible, setConfirmationVisible] = useState(false);
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const productData = await getAllOrders();
+        setOrders(productData.data);
+        console.log(productData.data);
+      } catch (error) {
+        console.error("Fetch error:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const updateOrderStatus = (orderId: string, newStatus: OrderStatus) => {
-    setOrders(
-      orders.map((order) =>
-        order.id === orderId ? { ...order, status: newStatus } : order
-      )
-    );
-    setShowStatusModal(false);
+    fetchData();
+  }, []);
+
+  const filteredOrders = orders
+    .filter(
+      (order) => order.status !== "DELIVERED" && order.status !== "CANCELLED"
+    )
+    .sort((a, b) => {
+      // Prioritize PENDING orders
+      if (a.status === "PENDING" && b.status !== "PENDING") return -1;
+      if (a.status !== "PENDING" && b.status === "PENDING") return 1;
+
+      // If both are PENDING or both are not, sort by date (oldest first)
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    });
+
+  const updateOrderStatus = async (_order: IOrder, newStatus: OrderStatus) => {
+    const _id = _order.id;
+    if (newStatus === OrderStatus.CANCELLED) return;
+    setIsLoading(true);
+    try {
+      await changeOrderStatus(_id, newStatus);
+      const da = await getAllOrders();
+      setOrders(da.data);
+      Toast.show({
+        type: "success",
+        text1: "Order updated",
+        visibilityTime: 1000,
+      });
+    } catch {
+      Toast.show({
+        type: "error",
+        text1: "Something went wrong. Please try again",
+
+        visibilityTime: 1500,
+      });
+    } finally {
+      setIsLoading(false);
+      setShowStatusModal(false);
+    }
   };
 
-  const handleDeleteOrder = (orderId: string) => {
-    Alert.alert("Delete Order", "Are you sure you want to delete this order?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: () => {
-          setOrders(orders.filter((order) => order.id !== orderId));
-          setShowStatusModal(false);
-        },
-      },
-    ]);
+  const handleCancelOrder = async () => {
+    if (!selectedOrder) return;
+    const _id = selectedOrder.id;
+    await cancelOrder(_id);
+    const da = await getAllOrders();
+    setOrders(da.data);
+    try {
+    } catch {
+      Toast.show({
+        type: "error",
+        text1: "Something went wrong. Please try again",
+
+        visibilityTime: 1500,
+      });
+    } finally {
+      setShowStatusModal(false);
+      setConfirmationVisible(false);
+      setIsLoading(false);
+    }
   };
 
-  const getStatusColor = (status: OrderStatus) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case "Pending":
-        return "#FFA500";
-      case "Cancelled":
+      case "PENDING":
+        return "#ffb835";
+      case "CANCELLED":
         return "#FF0000";
-      case "Delivering":
-        return "#FFA500";
-      case "Completed":
-        return "#00C853";
+      case "DELIVERING":
+        return "#6cfc7f";
+      case "DELIVERED":
+        return "#00b017";
       default:
         return "#666";
     }
@@ -70,10 +128,13 @@ export default function OrderManage() {
     <View style={styles.container}>
       <SubManagementHeader title="Order Management" />
       <View style={styles.content}>
-        <ScrollView>
-          {orders.map((order) => (
+        <FlatList
+          data={filteredOrders}
+          contentContainerStyle={{ paddingBottom: 20 }}
+          showsVerticalScrollIndicator={false}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item: order }) => (
             <TouchableOpacity
-              key={order.id}
               style={styles.orderCard}
               onPress={() => {
                 setSelectedOrder(order);
@@ -82,11 +143,13 @@ export default function OrderManage() {
             >
               <View style={styles.orderInfo}>
                 <Text style={styles.orderId}>Order #{order.id}</Text>
-                <Text style={styles.customerName}>{order.customerName}</Text>
-                <Text style={styles.orderDate}>{order.date}</Text>
+                <Text style={styles.customerName}>{order.receiptName}</Text>
+                <Text style={styles.orderDate}>
+                  {order.createdAt.toString().split("T")[0]}
+                </Text>
               </View>
               <View style={styles.orderDetails}>
-                <Text style={styles.orderTotal}>${order.total.toFixed(2)}</Text>
+                <Text style={styles.orderTotal}>${order.orderPrice}</Text>
                 <View
                   style={[
                     styles.statusBadge,
@@ -97,8 +160,8 @@ export default function OrderManage() {
                 </View>
               </View>
             </TouchableOpacity>
-          ))}
-        </ScrollView>
+          )}
+        />
 
         <Modal
           visible={showStatusModal}
@@ -120,12 +183,14 @@ export default function OrderManage() {
                   <Text style={styles.infoLabel}>
                     Customer Name:{" "}
                     <Text style={styles.infoValue}>
-                      {selectedOrder.customerName}
+                      {selectedOrder.receiptName}
                     </Text>
                   </Text>
                   <Text style={styles.infoLabel}>
                     Phone:{" "}
-                    <Text style={styles.infoValue}>{selectedOrder.phone}</Text>
+                    <Text style={styles.infoValue}>
+                      {selectedOrder.receiptPhone}
+                    </Text>
                   </Text>
                   <Text style={styles.infoLabel}>
                     Address:{" "}
@@ -136,33 +201,36 @@ export default function OrderManage() {
                   <Text style={styles.infoLabel}>
                     Created At:{" "}
                     <Text style={styles.infoValue}>
-                      {selectedOrder.createdAt}
+                      {selectedOrder.createdAt.toString().split("T")[0]}
                     </Text>
                   </Text>
                   <Text style={styles.infoLabel}>
                     Updated At:{" "}
                     <Text style={styles.infoValue}>
-                      {selectedOrder.updatedAt}
+                      {selectedOrder.updatedAt.toString().split("T")[0]}
                     </Text>
                   </Text>
                 </View>
               )}
-              {selectedOrder?.items && (
+              {selectedOrder?.OrderItemModels && (
                 <View style={styles.itemsList}>
-                  {selectedOrder.items.map((item, idx) => (
+                  {selectedOrder.OrderItemModels.map((item, idx) => (
                     <View key={idx} style={styles.itemRow}>
-                      <Image source={item.image} style={styles.itemImage} />
-                      <Text style={styles.itemName}>{item.name}</Text>
-                      <Text style={styles.itemQty}>x{item.quantity}</Text>
-                      <Text style={styles.itemPrice}>
-                        ${(item.price * item.quantity).toFixed(2)}
+                      <Image
+                        source={{ uri: item.ProductModel.images[0] }}
+                        style={styles.itemImage}
+                      />
+                      <Text style={styles.itemName}>
+                        {item.ProductModel.name}
                       </Text>
+                      <Text style={styles.itemQty}>x{item.quantity}</Text>
+                      <Text style={styles.itemPrice}>${item.sumPrice}</Text>
                     </View>
                   ))}
                   <View style={styles.totalRow}>
                     <Text style={styles.totalLabel}>Total:</Text>
                     <Text style={styles.totalValue}>
-                      ${selectedOrder.total.toFixed(2)}
+                      ${selectedOrder.orderPrice}
                     </Text>
                   </View>
                 </View>
@@ -173,7 +241,7 @@ export default function OrderManage() {
                   style={[
                     styles.statusValue,
                     {
-                      color: getStatusColor(selectedOrder?.status || "Pending"),
+                      color: getStatusColor(selectedOrder?.status || "PENDING"),
                     },
                   ]}
                 >
@@ -182,31 +250,46 @@ export default function OrderManage() {
               </View>
               {selectedOrder && (
                 <View style={styles.actionButtonsRow}>
-                  {selectedOrder.status === "Pending" && (
-                    <TouchableOpacity
-                      style={styles.actionBtn}
-                      onPress={() =>
-                        updateOrderStatus(selectedOrder.id, "Delivering")
-                      }
-                    >
-                      <Text style={styles.actionBtnText}>Deliver</Text>
-                    </TouchableOpacity>
+                  {selectedOrder.status === "PENDING" && (
+                    <>
+                      <TouchableOpacity
+                        style={styles.actionBtn}
+                        onPress={() =>
+                          updateOrderStatus(
+                            selectedOrder,
+                            OrderStatus.DELIVERING
+                          )
+                        }
+                      >
+                        <Text style={styles.actionBtnText}>Process</Text>
+                      </TouchableOpacity>
+                      {/* <TouchableOpacity
+                        style={[styles.actionBtn, styles.cancelBtn]}
+                        onPress={() => setShowDetailModal(false)}
+                      >
+                        <Text style={styles.actionBtnText}>Cancel</Text>
+                      </TouchableOpacity> */}
+                    </>
                   )}
-                  {selectedOrder.status === "Delivering" && (
+
+                  {selectedOrder.status === "DELIVERING" && (
                     <TouchableOpacity
                       style={styles.actionBtn}
                       onPress={() =>
-                        updateOrderStatus(selectedOrder.id, "Completed")
+                        updateOrderStatus(selectedOrder, OrderStatus.DELIVERED)
                       }
                     >
                       <Text style={styles.actionBtnText}>Complete</Text>
                     </TouchableOpacity>
                   )}
-                  {(selectedOrder.status === "Pending" ||
-                    selectedOrder.status === "Cancelled") && (
+
+                  {(selectedOrder.status === "PENDING" ||
+                    selectedOrder.status === "CANCELLED") && (
                     <TouchableOpacity
                       style={[styles.actionBtn, styles.deleteBtn]}
-                      onPress={() => handleDeleteOrder(selectedOrder.id)}
+                      onPress={() => {
+                        setConfirmationVisible(true);
+                      }}
                     >
                       <Text style={[styles.actionBtnText, { color: "#fff" }]}>
                         Delete
@@ -215,6 +298,30 @@ export default function OrderManage() {
                   )}
                 </View>
               )}
+            </View>
+          </View>
+        </Modal>
+
+        <Modal visible={confirmationVisible} animationType="slide" transparent>
+          <View style={styles.modalOverlay2}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalText}>Are you sure?</Text>
+
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  onPress={() => setConfirmationVisible(false)}
+                  style={styles.cancelBtn}
+                >
+                  <Text style={styles.cancelBtnText}>No</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={handleCancelOrder}
+                  style={styles.confirmBtn}
+                >
+                  <Text style={styles.confirmBtnText}>Yes</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </Modal>
@@ -403,6 +510,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     borderRadius: 8,
     marginHorizontal: 4,
+    fontWeight: "bold",
   },
   actionBtnText: {
     color: "#fff",
@@ -419,5 +527,52 @@ const styles = StyleSheet.create({
     marginRight: 8,
     backgroundColor: "#f5f5f5",
     resizeMode: "cover",
+  },
+  modalOverlay2: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 20,
+    width: "80%",
+    alignItems: "center",
+  },
+  modalText: {
+    fontSize: 18,
+    marginBottom: 20,
+    fontWeight: "bold",
+  },
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  cancelBtn: {
+    backgroundColor: "#ccc",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 6,
+    width: "48%",
+    alignItems: "center",
+  },
+  confirmBtn: {
+    backgroundColor: "#8B0000", // Dark red
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 6,
+    width: "48%",
+    alignItems: "center",
+  },
+  cancelBtnText: {
+    color: "#333",
+    fontWeight: "bold",
+  },
+  confirmBtnText: {
+    color: "#fff",
+    fontWeight: "bold",
   },
 });
