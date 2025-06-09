@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { UserController } from '@controllers/users.controller';
-import { CreateUserDto, UpdatePasswordDto, UpdateUserDto, UpdateUserLikeDto } from '@/dtos/users.dto';
+import { CreateStaffDto, CreateUserDto, UpdatePasswordDto, UpdateUserDto, UpdateUserLikeDto } from '@/dtos/users.dto';
 import { Routes } from '@interfaces/routes.interface';
 import { ValidationMiddleware } from '@middlewares/validation.middleware';
 import { AdminCheckMiddleware, AuthMiddleware } from '@/middlewares/auth.middleware';
@@ -26,6 +26,7 @@ export class UserRoute implements Routes {
     this.router.get(`${this.path}/s`, AuthMiddleware, AdminCheckMiddleware, this.user.getStaff);
     this.router.get(`${this.path}/:id(\\d+)`, AuthMiddleware, AdminCheckMiddleware, this.user.getUserById);
     this.router.post(`${this.path}`, AuthMiddleware, AdminCheckMiddleware, ValidationMiddleware(CreateUserDto), this.user.createUser);
+    this.router.post(`${this.path}/staff`, AuthMiddleware, AdminCheckMiddleware, ValidationMiddleware(CreateStaffDto), this.user.createStaff);
     this.router.put(`${this.path}/:id(\\d+)`, AuthMiddleware, AdminCheckMiddleware, ValidationMiddleware(UpdateUserDto, true), this.user.updateUser);
     this.router.delete(`${this.path}/:id(\\d+)`, AuthMiddleware, AdminCheckMiddleware, this.user.deleteUser);
     // this.router.patch(

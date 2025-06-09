@@ -12,129 +12,21 @@ import {
 import Header from "../../components/header";
 import { Ionicons } from "@expo/vector-icons";
 import { SubManagementHeader } from "components/managementHeader";
+import { IOrder } from "interfaces/IOrder";
+import { useAppStore } from "stores/useAppStore";
+import { useOrdersStore } from "stores/useOrderStore";
+import { useAuthStore } from "stores/useAuthStore";
 
-type OrderStatus = "Pending" | "Delivering" | "Completed" | "Cancelled";
-
-interface OrderItem {
-  name: string;
-  quantity: number;
-  price: number;
-  image: any;
-}
-
-interface Order {
-  id: string;
-  customerName: string;
-  phone: string;
-  address: string;
-  total: number;
-  status: OrderStatus;
-  date: string;
-  createdAt: string;
-  updatedAt: string;
-  items: OrderItem[];
-}
+type OrderStatus = "Pending" | "Delivering" | "Delivered" | "Cancelled";
 
 export default function OrderManage() {
-  const [orders, setOrders] = useState<Order[]>([
-    {
-      id: "1",
-      customerName: "John Doe",
-      phone: "0123456789",
-      address: "123 Main St, District 1, HCMC",
-      total: 150.0,
-      status: "Pending",
-      date: "2024-03-20",
-      createdAt: "2024-03-19 10:00",
-      updatedAt: "2024-03-20 09:00",
-      items: [
-        {
-          name: "Dog Food",
-          quantity: 2,
-          price: 30,
-          image: require("../../assets/dog1.png"),
-        },
-        {
-          name: "Cat Toy",
-          quantity: 1,
-          price: 20,
-          image: require("../../assets/cat1.png"),
-        },
-        {
-          name: "Bird Cage",
-          quantity: 1,
-          price: 70,
-          image: require("../../assets/bird1.png"),
-        },
-      ],
-    },
-    {
-      id: "2",
-      customerName: "Jane Smith",
-      phone: "0987654321",
-      address: "456 Le Loi, District 3, HCMC",
-      total: 80.0,
-      status: "Delivering",
-      date: "2024-03-21",
-      createdAt: "2024-03-20 14:00",
-      updatedAt: "2024-03-21 08:00",
-      items: [
-        {
-          name: "Cat Food",
-          quantity: 2,
-          price: 20,
-          image: require("../../assets/cat1.png"),
-        },
-        {
-          name: "Dog Toy",
-          quantity: 2,
-          price: 20,
-          image: require("../../assets/dog2.png"),
-        },
-      ],
-    },
-    {
-      id: "3",
-      customerName: "Alice Brown",
-      phone: "0111222333",
-      address: "789 Tran Hung Dao, District 5, HCMC",
-      total: 50.0,
-      status: "Completed",
-      date: "2024-03-19",
-      createdAt: "2024-03-18 16:00",
-      updatedAt: "2024-03-19 12:00",
-      items: [
-        {
-          name: "Hamster Wheel",
-          quantity: 1,
-          price: 50,
-          image: require("../../assets/hamster1.png"),
-        },
-      ],
-    },
-    {
-      id: "4",
-      customerName: "Bob Lee",
-      phone: "0999888777",
-      address: "321 Nguyen Hue, District 1, HCMC",
-      total: 30.0,
-      status: "Cancelled",
-      date: "2024-03-18",
-      createdAt: "2024-03-17 09:00",
-      updatedAt: "2024-03-18 07:00",
-      items: [
-        {
-          name: "Fish Food",
-          quantity: 3,
-          price: 10,
-          image: require("../../assets/fish1.png"),
-        },
-      ],
-    },
-  ]);
-
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<IOrder | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const isLoading = useAppStore((state) => state.isLoading);
+  const setIsLoading = useAppStore((state) => state.setIsLoading);
+  const orders = useOrdersStore((state) => state.orders);
+  const setOrders = useOrdersStore((state) => state.setOrders);
+  const profile = useAuthStore((state) => state.profile);
 
   const updateOrderStatus = (orderId: string, newStatus: OrderStatus) => {
     setOrders(

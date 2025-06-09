@@ -9,6 +9,9 @@ export const getAllStaff = () => {
 export const createNewUser = (data: any) => {
   return httpRequest.post("/users", data);
 };
+export const createNewStaff = (data: any) => {
+  return httpRequest.post("/users/staff", data);
+};
 
 export const getUserById = (userId: string) => {
   return httpRequest.get(`/users/${userId}`);

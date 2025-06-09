@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import { Container } from 'typedi';
 import { User } from '@interfaces/users.interface';
 import { UserService } from '@services/users.service';
-import { CreateUserDto } from '@dtos/users.dto';
+import { CreateUserDto, CreateStaffDto } from '@dtos/users.dto';
 import { RequestWithUser } from '@/interfaces/auth.interface';
 
 export class UserController {
@@ -54,7 +54,16 @@ export class UserController {
       next(error);
     }
   };
+  public createStaff = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const userData: CreateStaffDto = req.body;
+      const createUserData: User = await this.user.createStaff(userData);
 
+      res.status(201).json({ data: createUserData, message: 'created' });
+    } catch (error) {
+      next(error);
+    }
+  };
   public updateUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = Number(req.params.id);

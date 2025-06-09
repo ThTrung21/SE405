@@ -18,7 +18,12 @@ import { useAuthStore } from "stores/useAuthStore";
 import { SubManagementHeader } from "components/managementHeader";
 import { useAppStore } from "stores/useAppStore";
 import { useStaffStore } from "stores/useStaffStore";
-import { getAllStaff, updateUserProfile } from "apis/user.api";
+import {
+  createNewUser,
+  deleteUserById,
+  getAllStaff,
+  updateUserProfile,
+} from "apis/user.api";
 import { Role } from "constants/role";
 import { IUser } from "interfaces/IUser";
 import Toast from "react-native-toast-message";
@@ -99,7 +104,7 @@ export default function StaffManage() {
   const [addEmail, setAddEmail] = useState("");
   const [addName, setAddName] = useState("");
   const [addPhone, setAddPhone] = useState("");
-
+  const [confirmationVisible, setConfirmationVisible] = useState(false);
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
@@ -122,7 +127,68 @@ export default function StaffManage() {
     setEditStaff(staff);
     setModalVisible(true);
   };
+  const HandleAddStaff = async () => {
+    setIsLoading(true);
+    const payload = {
+      email: addEmail,
+      password: "12345678",
+      fullname: addName,
+      phone: addPhone,
+      role: staffRole,
+    };
+    try {
+      const response = await createNewUser(payload);
+      Toast.show({
+        type: "success",
+        text1: "Staff created",
+        visibilityTime: 1500,
+      });
+      const da = await getAllStaff();
+      setStaff(da.data);
 
+      setAddModalVisible(false);
+    } catch (error) {
+      console.log(error);
+      Toast.show({
+        type: "error",
+        text1: "Something went wrong. Please try again",
+
+        visibilityTime: 1500,
+      });
+      setAddModalVisible(false);
+    }
+  };
+  const HandleDeleteStaff = async () => {
+    if (!editStaff) {
+      Toast.show({
+        type: "error",
+        text1: "Something went wrong. Please try again",
+        visibilityTime: 1500,
+      });
+      return;
+    }
+
+    const dId = editStaff.id;
+
+    try {
+      await deleteUserById(dId);
+      const da = await getAllStaff();
+      setStaff(da.data);
+      Toast.show({
+        type: "success",
+        text1: "Staff Deleted",
+        visibilityTime: 1500,
+      });
+      setConfirmationVisible(false);
+      setModalVisible(false);
+    } catch {
+      Toast.show({
+        type: "error",
+        text1: "Something went wrong. Please try again",
+        visibilityTime: 1500,
+      });
+    }
+  };
   const handleupdateprofile = async () => {
     setIsLoading(true);
     let payload = {};
@@ -276,7 +342,10 @@ export default function StaffManage() {
             </View>
             <View style={styles.modalButtons}>
               {!isAddMode && (
-                <TouchableOpacity onPress={() => {}} style={styles.deleteBtn}>
+                <TouchableOpacity
+                  onPress={() => setConfirmationVisible(true)}
+                  style={styles.deleteBtn}
+                >
                   <Text style={styles.deleteBtnText}>Delete</Text>
                 </TouchableOpacity>
               )}
@@ -313,7 +382,26 @@ export default function StaffManage() {
           </View>
         </View>
       </Modal>
-
+      {/* confirmation modal */}
+      <Modal visible={confirmationVisible} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalText}>Are you sure?</Text>
+            <TouchableOpacity
+              onPress={() => setConfirmationVisible(false)}
+              style={styles.cancelBtn}
+            >
+              <Text style={styles.cancelBtnText}>No</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={HandleDeleteStaff}
+              style={styles.saveBtn}
+            >
+              <Text style={styles.saveBtnText}>Yes</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
       {/* add staff modal */}
       <Modal visible={addModalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
@@ -386,7 +474,7 @@ export default function StaffManage() {
               >
                 <Text style={styles.cancelBtnText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => {}} style={styles.saveBtn}>
+              <TouchableOpacity onPress={HandleAddStaff} style={styles.saveBtn}>
                 <Text style={styles.saveBtnText}>Add</Text>
               </TouchableOpacity>
             </View>
@@ -613,5 +701,16 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     alignSelf: "flex-start",
     marginLeft: 8,
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  modalContainer: {
+    width: "90%",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 20,
   },
 });

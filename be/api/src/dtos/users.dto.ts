@@ -1,6 +1,6 @@
 //import { Role } from '@/interfaces/auth.interface';
 import { Status } from '@/interfaces/auth.interface';
-import { Role } from '@/interfaces/users.interface';
+import { Role } from '@/interfaces/auth.interface';
 import {
   IsString,
   IsEmail,
@@ -15,6 +15,30 @@ import {
   IsArray,
   ArrayNotEmpty,
 } from 'class-validator';
+
+export class CreateStaffDto {
+  @IsEmail()
+  @IsOptional()
+  public email: string;
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(8)
+  @MaxLength(32)
+  public password: string;
+
+  @IsString()
+  @MaxLength(45)
+  @IsOptional()
+  public fullname: string;
+
+  @IsString()
+  @MaxLength(20)
+  @IsOptional()
+  public phone: string;
+
+  @IsOptional()
+  public role: string;
+}
 
 export class CreateUserDto {
   @IsEmail()

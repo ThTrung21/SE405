@@ -5,7 +5,7 @@ import { User } from '@interfaces/users.interface';
 import { UserModel } from '@models/users.model';
 import { Role } from '@/interfaces/auth.interface';
 import { DB } from '@/database';
-import { CreateUserDto, UpdatePasswordDto, UpdateUserDto, UpdateUserLikeDto } from '@/dtos/users.dto';
+import { CreateStaffDto, CreateUserDto, UpdatePasswordDto, UpdateUserDto, UpdateUserLikeDto } from '@/dtos/users.dto';
 import { faker } from '@faker-js/faker';
 import { AVATARS } from '@/database/seeders/constants';
 import { Op } from 'sequelize';
@@ -67,7 +67,22 @@ export class UserService {
 
     return findUser;
   }
-
+  public async createStaff(userData: CreateStaffDto): Promise<User> {
+    const findUser: User = await DB.User.findOne({ where: { email: userData.email } });
+    if (findUser) throw new HttpException(409, `This email ${userData.email} already exists`);
+    const _role = userData.role;
+    let a;
+    if (_role === 'STAFF') a = Role.STAFF;
+    if (_role === 'ADMIN') a = Role.ADMIN;
+    const hashedPassword = await hash(userData.password, 10);
+    const createStaffData: User = await DB.User.create({
+      ...userData,
+      role: a,
+      password: hashedPassword,
+      avatar: AVATARS[faker.number.int({ min: 0, max: 1 })],
+    });
+    return createStaffData;
+  }
   public async createUser(userData: CreateUserDto): Promise<User> {
     const findUser: User = await DB.User.findOne({ where: { email: userData.email } });
     if (findUser) throw new HttpException(409, `This email ${userData.email} already exists`);
