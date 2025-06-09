@@ -64,28 +64,26 @@ export default function ProfileScreen() {
         alert("Permission to access media library is required!");
       }
     })();
-    if (!rehydrated) {
-      // Auth state is still being rehydrated
-      return;
+    if (rehydrated && (!loggedIn || !profile)) {
+      router.replace("/(auth)/login");
     }
 
+    // Optionally also guard for auth
+    if (!loggedIn) {
+      router.push("/(auth)/login");
+      return;
+    }
+    console.log("Profile role: ", profile);
     if (profile) {
       setEditAddress(profile?.address || "");
       setEditPhone(profile?.phone || "");
       setEditName(profile?.fullname || "");
       setEditEmail(profile?.email || "");
       setRole(profile?.role);
+
       setCurrentPassword(profile?.password || "");
     }
-  }, [rehydrated]);
-  // if (!rehydrated) {
-  //   return null; // or a loading spinner
-  // }
-
-  // // Optionally also guard for auth
-  // if (!loggedIn || !profile) {
-  //   return null; // wait for redirect
-  // }
+  }, [rehydrated, loggedIn, profile]);
 
   const pickAvatar = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -188,7 +186,8 @@ export default function ProfileScreen() {
       setIsLoading(false);
     }
   };
-  const isStaff = loggedIn && (role === "ADMIN" || role === "STAFF");
+  const isStaff =
+    loggedIn && (profile?.role === "ADMIN" || profile?.role === "STAFF");
   const onOrdersPress = () => {
     router.push("/orders");
   };
@@ -222,7 +221,7 @@ export default function ProfileScreen() {
             <View style={styles.manageCard}>
               <TouchableOpacity
                 style={styles.cardItem}
-                onPress={() => router.push("(manage)/manage")}
+                onPress={() => router.push("/(manage)/manage")}
                 activeOpacity={0.7}
               >
                 <Text style={styles.cardTitle}>Manage</Text>
@@ -291,7 +290,9 @@ export default function ProfileScreen() {
             <Text style={styles.modalTitle}>Edit Personal Information</Text>
             <TouchableOpacity style={styles.avatarWrapper} onPress={pickAvatar}>
               <Image
-                source={avatar ? { uri: avatar } : defaultAvatar}
+                source={
+                  profile?.avatar ? { uri: profile?.avatar } : defaultAvatar
+                }
                 style={styles.avatar}
               />
               <View style={styles.avatarEditIcon}>
@@ -362,7 +363,25 @@ export default function ProfileScreen() {
       <Modal visible={passwordModal} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Change Password</Text>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Text style={styles.modalTitle2}>Change Password</Text>
+              <TouchableOpacity
+                style={styles.closeIconBtn}
+                onPress={() => setPasswordModal(false)}
+              >
+                <Text
+                  style={{ fontSize: 28, color: "#888", fontWeight: "bold" }}
+                >
+                  ×
+                </Text>
+              </TouchableOpacity>
+            </View>
             <TextInput
               style={styles.modalInput}
               placeholder="Current password"
@@ -519,11 +538,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "bold",
     color: "#003459",
     marginBottom: 16,
     textAlign: "center",
+  },
+  modalTitle2: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
   },
   cancelBtn: {
     paddingVertical: 10,
@@ -599,5 +623,8 @@ const styles = StyleSheet.create({
   modalButtonText: {
     color: "#fff",
     fontWeight: "bold",
+  },
+  closeIconBtn: {
+    padding: 8,
   },
 });

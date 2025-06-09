@@ -34,7 +34,11 @@ export const useAuthStore = create(
       setToken: (token: TokenPayload) => set(() => ({ token })),
       setLoggedIn: (status: boolean) => set(() => ({ loggedIn: status })),
       setProfile: (updatedProfile: any) =>
-        set((state) => ({ profile: { ...state.profile, ...updatedProfile } })),
+        set((state) => ({
+          profile: state.profile
+            ? { ...state.profile, ...updatedProfile }
+            : updatedProfile,
+        })),
       reset: () => set({ ...initState }),
       rehydrated: false,
     }),

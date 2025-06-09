@@ -14,6 +14,7 @@ import Header from "components/header";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useAuthStore } from "stores/useAuthStore";
+import { SubManagementHeader } from "components/managementHeader";
 
 const defaultAvatar = require("../../../assets/default_avatar.jpg");
 
@@ -75,7 +76,7 @@ export default function StaffManage() {
   const [editStaff, setEditStaff] = useState<Staff | null>(null);
   const [isAddMode, setIsAddMode] = useState(false);
   const profile = useAuthStore((state) => state.profile);
-  console.log(profile!.role);
+
   const openEdit = (item: Staff) => {
     setEditStaff({ ...item });
     setIsAddMode(false);
@@ -161,7 +162,7 @@ export default function StaffManage() {
 
   return (
     <View style={styles.container}>
-      <Header title="Staff Management" />
+      <SubManagementHeader title="Staff Management" />
       <View style={styles.content}>
         <ScrollView>
           {staff.map((item) => (

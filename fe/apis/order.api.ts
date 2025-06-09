@@ -4,7 +4,9 @@ import httpRequest from "../services/httpRequest";
 export const getAllOrders = () => {
   return httpRequest.get("/orders");
 };
-
+export const getOrderByUserId = (userId: any) => {
+  return httpRequest.get(`/orders/user/${userId}`);
+};
 export const addOrder = (data: any) => {
   return httpRequest.post("/orders", data);
 };

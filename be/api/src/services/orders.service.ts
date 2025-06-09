@@ -16,29 +16,43 @@ export class OrderService {
 
   public async findAllOrders(): Promise<Order[]> {
     const allOrders: Order[] = await DB.Order.findAll({
-      include: [DB.OrderItem],
-      // attributes: { exclude: ['userId'] },
+      include: [
+        {
+          model: DB.OrderItem,
+          include: [DB.Product], // this adds the related product
+        },
+      ],
     });
     return allOrders;
   }
 
   public async findAllOrdersByUserId(userId: number): Promise<Order[]> {
     const allOrders: Order[] = await DB.Order.findAll({
-      where: {
-        userId,
-      },
-      include: [DB.OrderItem],
+      where: { userId },
+      include: [
+        {
+          model: DB.OrderItem,
+          include: [DB.Product],
+        },
+      ],
     });
     return allOrders;
   }
 
   public async findOrderById(orderId: number): Promise<Order> {
-    const findOrder: Order = await DB.Order.findByPk(orderId);
+    const findOrder: Order | null = await DB.Order.findByPk(orderId, {
+      include: [
+        {
+          model: DB.OrderItem,
+          include: [DB.Product],
+        },
+      ],
+    });
+
     if (!findOrder) throw new HttpException(409, "Order doesn't exist");
 
     return findOrder;
   }
-
   public async createOrder(dto: CreateOrderDto, userId: number): Promise<Order> {
     const t = await DB.sequelize.transaction();
     try {

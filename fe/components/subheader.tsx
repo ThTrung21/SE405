@@ -13,7 +13,34 @@ import { useRouter } from "expo-router";
 interface MainHeaderProps {
   title: string;
 }
+export const MyOrderHeader: React.FC<MainHeaderProps> = ({ title }) => {
+  const router = useRouter();
+  const onBackPress = () => {
+    router.push("/profile");
+  };
+  const onCartPress = () => {
+    router.push("/(stack)/cart");
+  };
 
+  return (
+    <View style={styles.header}>
+      {/* Search Icon */}
+      <TouchableOpacity onPress={onBackPress}>
+        <AntDesign name="left" size={20} color="black" />
+      </TouchableOpacity>
+
+      {/* Title */}
+      <Text style={styles.title}>{title}</Text>
+
+      {/* Right icons container */}
+      <View style={styles.headerIcons}>
+        <TouchableOpacity onPress={onCartPress}>
+          <Ionicons name="cart-outline" size={20} />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+};
 const SubHeader: React.FC<MainHeaderProps> = ({ title }) => {
   const router = useRouter();
   const onBackPress = () => {

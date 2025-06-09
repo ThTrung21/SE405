@@ -1,47 +1,106 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import Header from '../../components/header';
-import Colors from '../../constants/Colors';
+"use client";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import Header from "../../components/header";
+import Colors from "../../constants/Colors";
+import { useAuthStore } from "stores/useAuthStore";
+import {
+  ManagementHeader,
+  SubManagementHeader,
+} from "components/managementHeader";
 
-const ManagementOption = ({ title, icon, onPress, active }: { title: string; icon: string; onPress: () => void; active?: boolean }) => (
-  <TouchableOpacity style={[styles.option, active && styles.activeOption]} onPress={onPress}>
+const ManagementOption = ({
+  title,
+  icon,
+  onPress,
+  active,
+}: {
+  title: string;
+  icon: string;
+  onPress: () => void;
+  active?: boolean;
+}) => (
+  <TouchableOpacity
+    style={[styles.option, active && styles.activeOption]}
+    onPress={onPress}
+  >
     <View style={[styles.iconContainer, active && styles.activeIconContainer]}>
-      <Ionicons name={icon as any} size={24} color={active ? '#fff' : '#003459'} />
+      <Ionicons
+        name={icon as any}
+        size={24}
+        color={active ? "#fff" : "#003459"}
+      />
     </View>
-    <Text style={[styles.optionText, active && styles.activeOptionText]}>{title}</Text>
+    <Text style={[styles.optionText, active && styles.activeOptionText]}>
+      {title}
+    </Text>
     <Ionicons name="chevron-forward" size={20} color="#666" />
   </TouchableOpacity>
 );
+const options1 = [
+  {
+    title: "Product Manage",
+    icon: "cube-outline",
+    route: "/productmanage",
+  },
+  {
+    title: "Staff Manage",
+    icon: "people-outline",
+    route: "/(manage)/staffmanage",
+  },
+  {
+    title: "Order Manage",
+    icon: "receipt-outline",
+    route: "/(manage)/ordermanage",
+  },
+];
 
+const options2 = [
+  {
+    title: "Product Manage",
+    icon: "cube-outline",
+    route: "/(manage)/productmanage",
+  },
+  {
+    title: "Order Manage",
+    icon: "receipt-outline",
+    route: "/(manage)/ordermanage",
+  },
+];
 export default function ManageScreen() {
   const router = useRouter();
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const profile = useAuthStore((state) => state.profile);
+  const loggedIn = useAuthStore((state) => state.loggedIn);
+  const [userRole, setUserRole] = useState("");
+  const rehydrated = useAuthStore((state) => state.rehydrated);
+  useEffect(() => {
+    if (rehydrated && (!loggedIn || !profile)) {
+      router.replace("/(auth)/login");
+    }
+    console.log(profile);
+    if (profile) {
+      setUserRole(profile.role);
+    }
+  }, [rehydrated, loggedIn, profile]);
+  if (!rehydrated || !loggedIn || !profile) return null;
 
-  const options = [
-    {
-      title: 'Product Manage',
-      icon: 'cube-outline',
-      route: '/productmanage',
-    },
-    {
-      title: 'Staff Manage',
-      icon: 'people-outline',
-      route: '/(manage)/staffmanage',
-    },
-    {
-      title: 'Order Manage',
-      icon: 'receipt-outline',
-      route: '/(manage)/ordermanage',
-    },
-  ];
-
+  let renderoption;
+  if (profile?.role === "STAFF") renderoption = options2;
+  else renderoption = options1;
   return (
     <View style={styles.container}>
-      <Header title="Quản lý" />
+      <ManagementHeader title="Management" />
       <ScrollView style={styles.content}>
-        {options.map((option, index) => (
+        {renderoption.map((option, index) => (
           <ManagementOption
             key={index}
             title={option.title}
@@ -61,21 +120,21 @@ export default function ManageScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   content: {
     flex: 1,
     padding: 16,
   },
   option: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: "#eee",
   },
   activeOption: {
     backgroundColor: Colors.accent,
@@ -86,23 +145,23 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     backgroundColor: Colors.accent,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 12,
   },
   activeIconContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderWidth: 2,
     borderColor: Colors.accent,
   },
   optionText: {
     flex: 1,
     fontSize: 16,
-    color: '#333',
-    fontWeight: '500',
+    color: "#333",
+    fontWeight: "500",
   },
   activeOptionText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
   },
-}); 
+});

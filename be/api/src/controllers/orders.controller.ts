@@ -25,7 +25,17 @@ export class OrderController {
       next(error);
     }
   };
+  public getOrderByUserId = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const UserId = Number(req.params.id);
 
+      const findalluserOrders = await this.order.findAllOrdersByUserId(UserId);
+
+      res.status(200).json({ data: findalluserOrders, message: 'findAll' });
+    } catch (error) {
+      next(error);
+    }
+  };
   public getOrderById = async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
       const orderId = Number(req.params.id);

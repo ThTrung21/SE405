@@ -128,7 +128,25 @@ export default function CheckoutScreen() {
       <Modal visible={isModalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Delivery Info</Text>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Text style={styles.modalTitle2}>Change Password</Text>
+              <TouchableOpacity
+                style={{ padding: 8 }}
+                onPress={() => setIsModalVisible(false)}
+              >
+                <Text
+                  style={{ fontSize: 28, color: "#888", fontWeight: "bold" }}
+                >
+                  ×
+                </Text>
+              </TouchableOpacity>
+            </View>
             <TextInput
               style={styles.modalInput}
               placeholder="Name"
@@ -478,5 +496,10 @@ const styles = StyleSheet.create({
   checkoutItemQuantity: {
     fontSize: 14,
     color: "#6B7280", // gray-500
+  },
+  modalTitle2: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
   },
 });

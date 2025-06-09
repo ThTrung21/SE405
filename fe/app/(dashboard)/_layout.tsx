@@ -85,7 +85,7 @@ export default function RootLayout() {
           ),
         }}
       />
-      <Tabs.Screen
+      {/* <Tabs.Screen
         name="notifications"
         options={{
           tabBarIcon: ({ color, size, focused }) => (
@@ -96,7 +96,7 @@ export default function RootLayout() {
             />
           ),
         }}
-      />
+      /> */}
       {/* <Tabs.Screen
         name="manage"
         options={{

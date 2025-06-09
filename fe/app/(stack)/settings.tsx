@@ -96,10 +96,10 @@ const SettingsScreen = (): JSX.Element => {
   const handleupdateprofile = async () => {
     setIsLoading(true);
     let payload = {};
-    if (editName !== profile!.fullname) payload = { ...payload, editName };
-    if (editAddress !== profile!.address) payload = { ...payload, editAddress };
-    if (editPhone !== profile!.phone) payload = { ...payload, editPhone };
-    if (editEmail !== profile!.email) payload = { ...payload, editEmail };
+    if (editName !== profile?.fullname) payload = { ...payload, editName };
+    if (editAddress !== profile?.address) payload = { ...payload, editAddress };
+    if (editPhone !== profile?.phone) payload = { ...payload, editPhone };
+    if (editEmail !== profile?.email) payload = { ...payload, editEmail };
     if (avatarUriToUpload) {
       const blob = await uriToBlob(avatarUriToUpload);
       const filename = avatarUriToUpload.split("/").pop(); // you can make this more unique if needed
@@ -153,8 +153,8 @@ const SettingsScreen = (): JSX.Element => {
                 <MaterialIcons name="edit" size={20} color="#fff" />
               </View>
             </TouchableOpacity>
-            <Text style={styles.avatarName}>{profile!.fullname}</Text>
-            <Text style={styles.avatarEmail}>{profile!.email}</Text>
+            <Text style={styles.avatarName}>{profile?.fullname}</Text>
+            <Text style={styles.avatarEmail}>{profile?.email}</Text>
           </View>
           <View style={styles.card}>
             <TouchableOpacity

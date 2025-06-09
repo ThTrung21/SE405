@@ -1,3 +1,5 @@
+import { IProduct } from "./IProduct";
+
 export interface IOrder {
   id: number | string;
   status: string;
@@ -10,6 +12,7 @@ export interface IOrder {
   createdAt: string | Date;
   updatedAt: string | Date;
   deletedAt?: string | Date;
+
   OrderItemModels: OrderItemModel[];
 }
 
@@ -21,4 +24,5 @@ export interface OrderItemModel {
   sumPrice: string;
   createdAt: string | Date;
   updatedAt: string | Date;
+  ProductModel: IProduct;
 }
