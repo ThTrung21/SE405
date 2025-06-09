@@ -28,7 +28,8 @@ import { Role } from "constants/role";
 import { IUser } from "interfaces/IUser";
 import Toast from "react-native-toast-message";
 
-const defaultAvatar = require("../../../assets/default_avatar.jpg");
+const defaultAvatar =
+  "https://i.pinimg.com/564x/0a/52/d5/0a52d5e52f7b81f96538d6b16ed5dc2b.jpg";
 
 // Define Staff type
 interface Staff {
@@ -236,7 +237,11 @@ export default function StaffManage() {
               <View style={styles.staffInfo}>
                 <View style={styles.avatarContainer}>
                   <Image
-                    source={item.avatar ? { uri: item.avatar } : defaultAvatar}
+                    source={
+                      item.avatar
+                        ? { uri: item.avatar }
+                        : { uri: defaultAvatar }
+                    }
                     style={styles.avatar}
                   />
                 </View>
@@ -269,7 +274,7 @@ export default function StaffManage() {
                 source={
                   editStaff && editStaff.avatar
                     ? { uri: editStaff.avatar }
-                    : defaultAvatar
+                    : { uri: defaultAvatar }
                 }
                 style={styles.avatarBig}
               />
@@ -409,7 +414,7 @@ export default function StaffManage() {
           <View style={styles.modalBox}>
             <Text style={styles.modalTitle}>Add New Staff</Text>
             <TouchableOpacity style={styles.avatarWrapper}>
-              <Image source={defaultAvatar} style={styles.avatarBig} />
+              <Image source={{ uri: defaultAvatar }} style={styles.avatarBig} />
             </TouchableOpacity>
             <Text style={styles.inputLabel}>Full Name</Text>
             <TextInput

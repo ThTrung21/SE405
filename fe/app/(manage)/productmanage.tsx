@@ -25,9 +25,11 @@ import { categories } from "app/(dashboard)/homepage";
 import { useAppStore } from "stores/useAppStore";
 import {
   createNewProduct,
+  deleteProductById,
   getAllProducts,
   getFilteredProduct,
   searchProductsByName,
+  updateProductById,
 } from "apis/product.api";
 import { getAllBrands } from "apis/brand.api";
 import { router } from "expo-router";
@@ -40,6 +42,7 @@ import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 import { uriToBlob } from "app/(dashboard)/profile";
 import { app } from "utils/firebase";
 import Toast from "react-native-toast-message";
+import { ICategory } from "interfaces/ICategory";
 
 export default function ProductManage() {
   //initial store
@@ -71,11 +74,11 @@ export default function ProductManage() {
 
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [brandOpen, setBrandOpen] = useState(false);
-  // const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<IProduct | null>(null);
 
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const [editProductId, setEditProductId] = useState<string | null>(null);
+  const [editProductId, setEditProductId] = useState<number | null>(null);
   const isLoading = useAppStore((state) => state.isLoading);
   const setIsLoading = useAppStore((state) => state.setIsLoading);
 
@@ -135,6 +138,11 @@ export default function ProductManage() {
     label: string;
     value: string;
   }
+  type _category = {
+    label: string;
+    idnumber: number;
+    icon: string;
+  };
   const brands = useBrandStore((state) => state.brands); // official brands from store
   const setBrands = useBrandStore((state) => state.setBrands);
 
@@ -183,7 +191,17 @@ export default function ProductManage() {
       setNewBrand("");
     }
   };
+  /////////////////////////////////////
+  ////
+  const getCategoryById = (id: number): _category | undefined => {
+    return categories.find((cat) => cat.idnumber === id);
+  };
 
+  // Given all brands
+  const getBrandById = (id: number): IBrand | undefined => {
+    return brands.find((brand) => brand.id === id);
+  };
+  /////
   //////////////////
   //
   //
@@ -208,52 +226,59 @@ export default function ProductManage() {
   };
 
   const openDetail = (item: IProduct) => {
-    // setSelectedProduct(item);
+    setSelectedProduct(item);
     setDetailModalVisible(true);
   };
 
-  // const openEdit = (item: IProduct) => {
-  //   setForm({
-  //     name: item.name,
-  //     price: item.price.toString(),
-  //     description: item.description,
-  //     images: item.images,
-  //     category: item.category,
-  //     brand: item.brand,
-  //     stock: item.stock?.toString() || "1",
-  //   });
-  //   setCategoryValue(item.category);
-  //   setBrandValue(item.brand);
-  //   setEditMode(true);
-  //   setEditProductId(item.id);
-  //   setModalVisible(true);
-  //   setDetailModalVisible(false);
-  // };
+  const openEdit = (item: IProduct) => {
+    setForm({
+      name: item.name,
+      price: item.price.toString(),
+      description: item.desc,
+      images: item.images,
+      category: item.categoryId.toString(),
+      brand: item.brandId.toString(),
+      stock: item.stock?.toString() || "1",
+    });
+    setCategoryValue(item.categoryId.toString());
+    setBrandValue(item.brandId.toString());
+    setEditMode(true);
+    setEditProductId(item.id);
+    setModalVisible(true);
+    setDetailModalVisible(false);
+  };
 
-  // const openItemEdit = (item: IProduct) => {
-  //   openEdit(item);
-  // };
+  const openItemEdit = (item: IProduct) => {
+    openEdit(item);
+  };
 
-  // const handleDelete = (id: string) => {
-  //   Alert.alert(
-  //     "Delete Product",
-  //     "Are you sure you want to delete this product?",
-  //     [
-  //       { text: "Cancel", style: "cancel" },
-  //       {
-  //         text: "Delete",
-  //         style: "destructive",
-  //         onPress: () => {
-  //           setProducts((products) => products.filter((p) => p.id !== id));
-  //           setModalVisible(false);
-  //           setEditMode(false);
-  //           setEditProductId(null);
-  //           setDetailModalVisible(false);
-  //         },
-  //       },
-  //     ]
-  //   );
-  // };
+  const handleDelete = async (id: string) => {
+    setIsLoading(true);
+    try {
+      await deleteProductById(Number(id));
+      setIsLoading(false);
+      const productData = await getAllProducts();
+      setProducts(productData.data);
+      Toast.show({
+        type: "success",
+        text1: "Delete product successfully!",
+        visibilityTime: 3000,
+      });
+    } catch (error: any) {
+      console.log(error);
+      setIsLoading(false);
+      Toast.show({
+        type: "error",
+        text1: "Something went wrong:",
+        visibilityTime: 3000,
+      });
+    } finally {
+      setIsLoading(false);
+      setModalVisible(false);
+      setEditMode(false);
+      setEditProductId(null);
+    }
+  };
 
   const pickImages = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -287,22 +312,29 @@ export default function ProductManage() {
     console.log("AAAA: ", form.images);
 
     if (editMode && editProductId) {
-      // setProducts(
-      //   products.map((p) =>
-      //     p.id === editProductId
-      //       ? {
-      //           ...p,
-      //           name: form.name,
-      //           price: parseFloat(form.price),
-      //           images: form.images,
-      //           category: form.category,
-      //           description: form.description,
-      //           brand: form.brand,
-      //           stock: parseInt(form.stock) || 0,
-      //         }
-      //       : p
-      //   )
-      // );
+      let payload: any = {
+        productId: Number(editProductId),
+        name: form.name,
+        desc: form.description,
+        price: Number(form.price),
+        stock: Number(form.stock),
+      };
+      try {
+        await updateProductById(Number(editProductId), payload);
+        Toast.show({
+          type: "success",
+          text1: "Create new product successfully!",
+          visibilityTime: 1000,
+        });
+        const productData = await getAllProducts();
+        setProducts(productData.data);
+      } catch {
+        Toast.show({
+          type: "error",
+          text1: "Error. Something went wrong",
+          visibilityTime: 3000,
+        });
+      }
     }
     //add
     else {
@@ -339,6 +371,8 @@ export default function ProductManage() {
           payload = { ...payload, images: uploadedUrls }; // attach the image URLs
         }
         await createNewProduct(payload);
+        const productData = await getAllProducts();
+        setProducts(productData.data);
         Toast.show({
           type: "success",
           text1: "Create new product successfully!",
@@ -477,6 +511,7 @@ export default function ProductManage() {
         renderItem={({ item }) => (
           <View style={styles.card}>
             <TouchableOpacity
+              onPress={() => openDetail(item)}
               style={{ flex: 1 }} // Make TouchableOpacity take up the whole card
             >
               <View>
@@ -502,18 +537,35 @@ export default function ProductManage() {
                 {form.images.map((img, idx) => (
                   <View key={idx} style={styles.imageThumbWrap}>
                     <Image source={img} style={styles.imageThumb} />
-                    <TouchableOpacity
-                      style={styles.removeImgBtn}
-                      onPress={() => removeImage(idx)}
-                    >
-                      <Ionicons name="close-circle" size={20} color="#ff4444" />
-                    </TouchableOpacity>
+                    {!editMode ? (
+                      <TouchableOpacity
+                        style={styles.removeImgBtn}
+                        onPress={() => removeImage(idx)}
+                      >
+                        <Ionicons
+                          name="close-circle"
+                          size={20}
+                          color="#ff4444"
+                        />
+                      </TouchableOpacity>
+                    ) : (
+                      <></>
+                    )}
                   </View>
                 ))}
-                <TouchableOpacity style={styles.addImgBtn} onPress={pickImages}>
-                  <Ionicons name="add" size={28} color="#888" />
-                  <Text style={{ color: "#888", fontSize: 12 }}>Add Image</Text>
-                </TouchableOpacity>
+                {!editMode ? (
+                  <TouchableOpacity
+                    style={styles.addImgBtn}
+                    onPress={pickImages}
+                  >
+                    <Ionicons name="add" size={28} color="#888" />
+                    <Text style={{ color: "#888", fontSize: 12 }}>
+                      Add Image
+                    </Text>
+                  </TouchableOpacity>
+                ) : (
+                  <></>
+                )}
               </View>
               <TextInput
                 style={styles.input}
@@ -587,67 +639,88 @@ export default function ProductManage() {
                 <Text style={{ fontWeight: "500", marginBottom: 4 }}>
                   Category
                 </Text>
-                <DropDownPicker
-                  open={categoryOpen}
-                  value={categoryValue}
-                  items={categoryOptions}
-                  setOpen={setCategoryOpen}
-                  setValue={setCategoryValue}
-                  placeholder="Select category"
-                  style={styles.input}
-                  textStyle={{
-                    fontWeight: "bold",
-                    color: "#222",
-                    fontSize: 16,
-                  }}
-                  dropDownContainerStyle={{
-                    borderColor: "#E0E0E0",
-                    borderRadius: 8,
-                  }}
-                  zIndex={10}
-                  // zIndexInverse={400}
-                />
+                {!editMode ? (
+                  <DropDownPicker
+                    open={categoryOpen}
+                    value={categoryValue}
+                    items={categoryOptions}
+                    setOpen={setCategoryOpen}
+                    setValue={setCategoryValue}
+                    placeholder="Select category"
+                    style={styles.input}
+                    textStyle={{
+                      fontWeight: "bold",
+                      color: "#222",
+                      fontSize: 16,
+                    }}
+                    dropDownContainerStyle={{
+                      borderColor: "#E0E0E0",
+                      borderRadius: 8,
+                    }}
+                    zIndex={10}
+                    // zIndexInverse={400}
+                  />
+                ) : (
+                  <TextInput
+                    style={styles.input}
+                    editable={false}
+                    focusable={false}
+                    placeholder="Price"
+                    placeholderTextColor="#999"
+                    value={getCategoryById(Number(categoryValue))?.label}
+                  />
+                )}
               </View>
               {/* Dropdown brand */}
               <View style={styles.dropdownWrap2}>
                 <Text style={{ fontWeight: "500", marginBottom: 4 }}>
                   Brand
                 </Text>
-
-                <DropDownPicker
-                  open={brandOpen}
-                  value={brandValue}
-                  items={brandItems}
-                  setOpen={setBrandOpen}
-                  setValue={setBrandValue}
-                  setItems={setBrandItems}
-                  placeholder="Select brand"
-                  onChangeValue={(val) => {
-                    if (val === "__add_new__") {
-                      setShowBrandInput(true);
-                      setBrandValue(null); // optional: clear selection
-                    } else {
-                      setShowBrandInput(false);
-                      const selected = brandItems.find((b) => b.value === val);
-                      if (selected) {
-                        setForm((f) => ({ ...f, brand: selected.label }));
+                {!editMode ? (
+                  <DropDownPicker
+                    open={brandOpen}
+                    value={brandValue}
+                    items={brandItems}
+                    setOpen={setBrandOpen}
+                    setValue={setBrandValue}
+                    setItems={setBrandItems}
+                    placeholder="Select brand"
+                    onChangeValue={(val) => {
+                      if (val === "__add_new__") {
+                        setShowBrandInput(true);
+                        setBrandValue(null); // optional: clear selection
+                      } else {
+                        setShowBrandInput(false);
+                        const selected = brandItems.find(
+                          (b) => b.value === val
+                        );
+                        if (selected) {
+                          setForm((f) => ({ ...f, brand: selected.label }));
+                        }
                       }
-                    }
-                  }}
-                  style={styles.input}
-                  textStyle={{
-                    fontWeight: "bold",
-                    color: "#222",
-                    fontSize: 16,
-                  }}
-                  dropDownContainerStyle={{
-                    borderColor: "#E0E0E0",
-                    borderRadius: 8,
-                  }}
-                  zIndex={5}
-                  // zIndexInverse={2000}
-                />
-
+                    }}
+                    style={styles.input}
+                    textStyle={{
+                      fontWeight: "bold",
+                      color: "#222",
+                      fontSize: 16,
+                    }}
+                    dropDownContainerStyle={{
+                      borderColor: "#E0E0E0",
+                      borderRadius: 8,
+                    }}
+                    zIndex={5}
+                    // zIndexInverse={2000}
+                  />
+                ) : (
+                  <TextInput
+                    style={styles.input}
+                    editable={false}
+                    focusable={false}
+                    placeholderTextColor="#999"
+                    value={getBrandById(Number(brandValue))?.name}
+                  />
+                )}
                 {/* Show Input Field when "Add new brand" selected */}
                 {showBrandInput && (
                   <View
@@ -673,7 +746,7 @@ export default function ProductManage() {
                       onPress={handleAddBrand}
                     >
                       <Text style={{ color: "#fff", fontWeight: "bold" }}>
-                        Add
+                        {editMode ? "Edit" : "Add"}
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -699,7 +772,19 @@ export default function ProductManage() {
                   Cancel
                 </Text>
               </TouchableOpacity>
-
+              {editMode && editProductId && (
+                <TouchableOpacity
+                  onPress={() => handleDelete(editProductId)}
+                  style={[
+                    styles.saveBtn,
+                    { backgroundColor: "#E57373", marginLeft: 8 },
+                  ]}
+                >
+                  <Text style={{ color: "#fff", fontWeight: "bold" }}>
+                    Delete
+                  </Text>
+                </TouchableOpacity>
+              )}
               <TouchableOpacity
                 onPress={handleSave}
                 style={[
@@ -714,7 +799,7 @@ export default function ProductManage() {
         </View>
       </Modal>
       {/* Modal chi tiết sản phẩm */}
-      {/* <Modal visible={detailModalVisible} animationType="slide" transparent>
+      <Modal visible={detailModalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>
             {selectedProduct && (
@@ -733,18 +818,16 @@ export default function ProductManage() {
                     marginBottom: 8,
                   }}
                 >
-                  $ {selectedProduct.price.toFixed(2)}
+                  $ {selectedProduct.price}
                 </Text>
-                <Text style={{ marginBottom: 8 }}>
-                  {selectedProduct.description}
-                </Text>
+                <Text style={{ marginBottom: 8 }}>{selectedProduct.desc}</Text>
                 <Text style={{ marginBottom: 4 }}>
                   <Text style={{ fontWeight: "bold" }}>Category:</Text>{" "}
-                  {selectedProduct.category}
+                  {selectedProduct.categoryId}
                 </Text>
                 <Text style={{ marginBottom: 4 }}>
                   <Text style={{ fontWeight: "bold" }}>Brand:</Text>{" "}
-                  {selectedProduct.brand}
+                  {selectedProduct.brandId}
                 </Text>
                 <Text style={{ marginBottom: 12 }}>
                   <Text style={{ fontWeight: "bold" }}>Stock:</Text>{" "}
@@ -777,9 +860,9 @@ export default function ProductManage() {
                   </Text>
                 </TouchableOpacity>
               )}
-              {selectedProduct && (
+              {/* {selectedProduct && (
                 <TouchableOpacity
-                  onPress={() => handleDelete(selectedProduct.id)}
+                  onPress={() => {}}
                   style={[
                     styles.saveBtn,
                     { backgroundColor: "#E57373", marginLeft: 8 },
@@ -789,11 +872,11 @@ export default function ProductManage() {
                     Delete
                   </Text>
                 </TouchableOpacity>
-              )}
+              )} */}
             </View>
           </View>
         </View>
-      </Modal> */}
+      </Modal>
     </View>
   );
 }
@@ -913,7 +996,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 12,
     backgroundColor: "#F5F5F7",
-    fontWeight: "bold",
+
     color: "#222",
   },
   imagePickerRow: {

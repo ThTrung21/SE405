@@ -75,5 +75,6 @@ export class UpdateProductDto {
   public stock: number;
 
   @IsNumber()
+  @IsOptional()
   public score: number;
 }

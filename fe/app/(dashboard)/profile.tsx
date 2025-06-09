@@ -24,7 +24,8 @@ import { changeUserPassword, updateUserProfile } from "apis/user.api";
 import Toast from "react-native-toast-message";
 import { executeMutation } from "firebase/data-connect";
 import { Role } from "constants/role";
-const defaultAvatar = require("../../assets/avatar-default.png");
+const defaultAvatar =
+  "https://i.pinimg.com/564x/0a/52/d5/0a52d5e52f7b81f96538d6b16ed5dc2b.jpg";
 export const uriToBlob = async (uri: string): Promise<Blob> => {
   const response = await fetch(uri);
   const blob = await response.blob();
