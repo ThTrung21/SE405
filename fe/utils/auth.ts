@@ -7,10 +7,10 @@ export const logOut = () => {
   const setIsLoading = useAppStore.getState().setIsLoading;
   const reset = useAuthStore.getState().reset;
   const resetCart = useCartStore.getState().reset;
-  localStorage.removeItem("auth");
+
   setIsLoading(true);
-  reset();
-  resetCart();
+  reset(); // Resets auth state
+  resetCart(); // Resets cart state
   setIsLoading(false);
 };
 

@@ -11,7 +11,7 @@ import * as Device from "expo-device";
 import { login } from "apis/auth.api";
 
 type AuthContextType = {
-  logIn: (payload: { phone: string; password: string }) => Promise<void>;
+  logIn: (payload: { email: string; password: string }) => Promise<void>;
   logOut: () => void;
 };
 
@@ -43,24 +43,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
         visibilityTime: 1000,
       });
 
-      // Example local notification (optional)
-      // await Notifications.scheduleNotificationAsync({
-      //   content: {
-      //     title: "Welcome!",
-      //     body: `Hello ${rest.name || "User"}, you're now logged in.`,
-      //   },
-      //   trigger: null,
-      // });
-
-      // Navigate based on role
-      if (profile.role != Role.ADMIN) {
-        router.replace("/(dashboard)/homepage");
-      }
-      // if (profile.role === Role.ADMIN) {
-      else router.replace("/(dashboard)/homepage");
-      // } else if (profile.role === Role.STAFF) {
-      //   router.replace("/staff");
-      // }
+      router.replace("/(dashboard)/homepage");
     } catch (error: any) {
       setIsLoading(false);
       console.error(error);

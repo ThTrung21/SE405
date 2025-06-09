@@ -8,6 +8,7 @@ import { DB } from '@/database';
 import { CreateUserDto, UpdatePasswordDto, UpdateUserDto, UpdateUserLikeDto } from '@/dtos/users.dto';
 import { faker } from '@faker-js/faker';
 import { AVATARS } from '@/database/seeders/constants';
+import { Op } from 'sequelize';
 @Service()
 export class UserService {
   public async findAllUser(): Promise<User[]> {
@@ -52,7 +53,7 @@ export class UserService {
 
   public async findAllStaff(): Promise<User[]> {
     const allStaff: User[] = await DB.User.findAll({
-      where: { role: Role.STAFF },
+      where: { role: { [Op.or]: [Role.STAFF, Role.ADMIN] } },
       attributes: {
         exclude: ['password'],
       },

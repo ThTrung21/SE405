@@ -101,15 +101,6 @@ export const categories = [
   },
 ];
 
-// const categories: Category[] = [
-//   { label: "Popular", icon: "star-outline", activeIcon: "star" },
-//   { label: "Pets", icon: "paw-outline", activeIcon: "paw" },
-//   { label: "Proteine", icon: "restaurant-outline", activeIcon: "restaurant" },
-//   { label: "Biscuit", icon: "pizza-outline", activeIcon: "pizza" },
-//   { label: "Small", icon: "pricetag-outline", activeIcon: "pricetag" },
-//   { label: "Large", icon: "pricetags-outline", activeIcon: "pricetags" },
-// ];
-
 export default function Homepage() {
   const [selectedCategoryIndex, setSelectedCategoryIndex] = useState<number>(0);
   const isLoading = useAppStore((state) => state.isLoading);
@@ -364,27 +355,27 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     flexDirection: "row",
   },
-  searchContainer: {
-    height: 40,
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f1f1f1",
-    marginHorizontal: 16,
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginBottom: 12,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    borderWidth: 0,
-    fontSize: 14,
+  // searchContainer: {
+  //   height: 40,
+  //   flexDirection: "row",
+  //   alignItems: "center",
+  //   backgroundColor: "#f1f1f1",
+  //   marginHorizontal: 16,
+  //   borderRadius: 20,
+  //   paddingHorizontal: 12,
+  //   paddingVertical: 8,
+  //   marginBottom: 12,
+  // },
+  // searchIcon: {
+  //   marginRight: 8,
+  // },
+  // searchInput: {
+  //   flex: 1,
+  //   borderWidth: 0,
+  //   fontSize: 14,
 
-    color: "#000",
-  },
+  //   color: "#000",
+  // },
   // scrollContainer: {
   //   // Enable touch-action for horizontal pan dragging on web
   //   touchAction: "pan-x",

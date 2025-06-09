@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   StyleSheet,
@@ -9,12 +9,19 @@ import {
   Modal,
   TextInput,
   Alert,
+  FlatList,
 } from "react-native";
 import Header from "components/header";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useAuthStore } from "stores/useAuthStore";
 import { SubManagementHeader } from "components/managementHeader";
+import { useAppStore } from "stores/useAppStore";
+import { useStaffStore } from "stores/useStaffStore";
+import { getAllStaff, updateUserProfile } from "apis/user.api";
+import { Role } from "constants/role";
+import { IUser } from "interfaces/IUser";
+import Toast from "react-native-toast-message";
 
 const defaultAvatar = require("../../../assets/default_avatar.jpg");
 
@@ -29,147 +36,135 @@ interface Staff {
   avatar: string | null;
 }
 
-const initialStaff: Staff[] = [
-  {
-    id: "1",
-    name: "John Doe",
-    role: "Admin",
-    email: "john@petshop.com",
-    phone: "0123456789",
-    dob: "1990-01-01",
-    avatar: null,
-  },
-  {
-    id: "2",
-    name: "Jane Smith",
-    role: "Staff",
-    email: "jane@petshop.com",
-    phone: "0987654321",
-    dob: "1995-05-10",
-    avatar: null,
-  },
-  {
-    id: "3",
-    name: "Alice Brown",
-    role: "Customer",
-    email: "alice@petshop.com",
-    phone: "0111222333",
-    dob: "2000-12-12",
-    avatar: null,
-  },
-  {
-    id: "4",
-    name: "Bob Lee",
-    role: "Staff",
-    email: "bob@petshop.com",
-    phone: "0999888777",
-    dob: "1992-07-20",
-    avatar: null,
-  },
-];
+// const initialStaff: Staff[] = [
+//   {
+//     id: "1",
+//     name: "John Doe",
+//     role: "Admin",
+//     email: "john@petshop.com",
+//     phone: "0123456789",
+//     dob: "1990-01-01",
+//     avatar: null,
+//   },
+//   {
+//     id: "2",
+//     name: "Jane Smith",
+//     role: "Staff",
+//     email: "jane@petshop.com",
+//     phone: "0987654321",
+//     dob: "1995-05-10",
+//     avatar: null,
+//   },
+//   {
+//     id: "3",
+//     name: "Alice Brown",
+//     role: "Customer",
+//     email: "alice@petshop.com",
+//     phone: "0111222333",
+//     dob: "2000-12-12",
+//     avatar: null,
+//   },
+//   {
+//     id: "4",
+//     name: "Bob Lee",
+//     role: "Staff",
+//     email: "bob@petshop.com",
+//     phone: "0999888777",
+//     dob: "1992-07-20",
+//     avatar: null,
+//   },
+// ];
 
-const roles: Array<Staff["role"]> = ["Admin", "Staff"];
+const roles: Array<string> = ["ADMIN", "STAFF"];
 
 export default function StaffManage() {
-  const [staff, setStaff] = useState<Staff[]>(initialStaff);
+  const isLoading = useAppStore((state) => state.isLoading);
+  const setIsLoading = useAppStore((state) => state.setIsLoading);
+  const staff = useStaffStore((state) => state.staff);
+  const setStaff = useStaffStore((state) => state.setStaff);
+  const filteredstaff = useStaffStore((state) => state.filteredStaff);
+  const setfilteredstaff = useStaffStore((state) => state.setFilteredStaff);
+
   const [modalVisible, setModalVisible] = useState(false);
-  const [editStaff, setEditStaff] = useState<Staff | null>(null);
+  const [addModalVisible, setAddModalVisible] = useState(false);
+
+  const [editStaff, setEditStaff] = useState<IUser | null>(null);
+  const [addStaff, setAddStaff] = useState<IUser | null>(null);
   const [isAddMode, setIsAddMode] = useState(false);
   const profile = useAuthStore((state) => state.profile);
+  const [staffRole, setStaffRole] = useState("");
+  const [editName, setEditName] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [addEmail, setAddEmail] = useState("");
+  const [addName, setAddName] = useState("");
+  const [addPhone, setAddPhone] = useState("");
 
-  const openEdit = (item: Staff) => {
-    setEditStaff({ ...item });
-    setIsAddMode(false);
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        console.log("Fetching products...");
+        const productData = await getAllStaff();
+        setStaff(productData.data);
+      } catch (error) {
+        console.error("Fetch error:", error);
+      } finally {
+        setIsLoading(false);
+      }
+      setStaffRole("STAFF");
+    };
+
+    fetchData();
+  }, []);
+
+  const openEditModal = (staff: IUser) => {
+    setEditStaff(staff);
     setModalVisible(true);
   };
 
-  const openAdd = () => {
-    setEditStaff({
-      id: Date.now().toString(),
-      name: "",
-      role: "Staff",
-      email: "",
-      phone: "",
-      dob: "",
-      avatar: null,
-    });
-    setIsAddMode(true);
-    setModalVisible(true);
-  };
+  const handleupdateprofile = async () => {
+    setIsLoading(true);
+    let payload = {};
+    if (editName !== profile?.fullname) payload = { ...payload, editName };
+    if (editPhone !== profile?.phone) payload = { ...payload, editPhone };
+    if (editEmail !== profile?.email) payload = { ...payload, editEmail };
 
-  const handleDelete = () => {
-    if (!editStaff) return;
-    Alert.alert(
-      "Delete Staff",
-      "Are you sure you want to delete this staff member?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            setStaff((prev) => prev.filter((s) => s.id !== editStaff.id));
-            setModalVisible(false);
-          },
-        },
-      ]
-    );
-  };
-
-  const formatDate = (dateStr: string) => {
-    if (!dateStr) return "";
-    const parts = dateStr.split("-");
-    if (parts.length === 3) {
-      return `${parts[2]}/${parts[1]}/${parts[0]}`;
-    }
-    return dateStr;
-  };
-
-  const parseDate = (dateStr: string) => {
-    if (!dateStr) return "";
-    const parts = dateStr.split("/");
-    if (parts.length === 3) {
-      return `${parts[2]}-${parts[1]}-${parts[0]}`;
-    }
-    return dateStr;
-  };
-
-  const pickAvatar = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      setEditStaff((prev) =>
-        prev ? { ...prev, avatar: result.assets[0].uri } : prev
-      );
+    try {
+      const { data } = await updateUserProfile(payload);
+      const da = await getAllStaff();
+      setStaff(da.data);
+      setIsLoading(false);
+      Toast.show({
+        type: "success",
+        text1: "Staff updated",
+        visibilityTime: 1000,
+      });
+      setModalVisible(false);
+    } catch (error: any) {
+      console.log(error);
+      Toast.show({
+        type: "error",
+        text1: "Something went wrong",
+        visibilityTime: 2000,
+      });
+      setIsLoading(false);
     }
   };
 
-  const handleSave = () => {
-    if (!editStaff) return;
-    if (isAddMode) {
-      setStaff((prev) => [...prev, editStaff]);
-    } else {
-      setStaff((prev) =>
-        prev.map((s) => (s.id === editStaff.id ? editStaff : s))
-      );
-    }
-    setModalVisible(false);
-  };
-
+  // ///////////////////////////////////
   return (
     <View style={styles.container}>
       <SubManagementHeader title="Staff Management" />
       <View style={styles.content}>
-        <ScrollView>
-          {staff.map((item) => (
+        <FlatList
+          data={staff}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={{ paddingBottom: 20 }}
+          renderItem={({ item }) => (
             <TouchableOpacity
-              key={item.id}
               style={styles.staffCard}
-              onPress={() => openEdit(item)}
+              onPress={() => openEditModal(item)}
             >
               <View style={styles.staffInfo}>
                 <View style={styles.avatarContainer}>
@@ -179,32 +174,30 @@ export default function StaffManage() {
                   />
                 </View>
                 <View style={styles.staffDetails}>
-                  <Text style={styles.staffName}>{item.name}</Text>
+                  <Text style={styles.staffName}>{item.fullname}</Text>
                   <Text style={styles.staffRole}>{item.role}</Text>
                 </View>
+                <TouchableOpacity style={styles.editButton}>
+                  <Ionicons name="create-outline" size={20} color="#003459" />
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity
-                style={styles.editButton}
-                onPress={() => openEdit(item)}
-              >
-                <Ionicons name="create-outline" size={20} color="#003459" />
-              </TouchableOpacity>
             </TouchableOpacity>
-          ))}
-        </ScrollView>
-        <TouchableOpacity style={styles.addButton} onPress={openAdd}>
+          )}
+        />
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => setAddModalVisible(true)}
+        >
           <Ionicons name="add" size={24} color="#fff" />
         </TouchableOpacity>
       </View>
 
-      {/* Modal Edit/Add Staff */}
+      {/* Modal Edit Staff */}
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>
-              {isAddMode ? "Add New Staff" : "Edit Staff"}
-            </Text>
-            <TouchableOpacity style={styles.avatarWrapper} onPress={pickAvatar}>
+            <Text style={styles.modalTitle}>Edit Staff</Text>
+            <TouchableOpacity style={styles.avatarWrapper}>
               <Image
                 source={
                   editStaff && editStaff.avatar
@@ -221,53 +214,53 @@ export default function StaffManage() {
             <TextInput
               style={styles.input}
               placeholder="Full Name"
-              value={editStaff?.name || ""}
-              onChangeText={(v) =>
-                setEditStaff((s) => (s ? { ...s, name: v } : s))
-              }
+              placeholderTextColor="#999"
+              value={editStaff?.fullname ? editStaff?.fullname : editName}
+              onChangeText={setEditName}
             />
             <Text style={styles.inputLabel}>Email</Text>
             <TextInput
               style={styles.input}
               placeholder="Email"
-              value={editStaff?.email || ""}
-              onChangeText={(v) =>
-                setEditStaff((s) => (s ? { ...s, email: v } : s))
-              }
+              placeholderTextColor="#999"
+              value={editStaff?.email ? editStaff?.email : editEmail}
+              onChangeText={setEditEmail}
               keyboardType="email-address"
             />
             <Text style={styles.inputLabel}>Phone Number</Text>
             <TextInput
               style={styles.input}
               placeholder="Phone Number"
-              value={editStaff?.phone || ""}
-              onChangeText={(v) =>
-                setEditStaff((s) => (s ? { ...s, phone: v } : s))
-              }
+              placeholderTextColor="#999"
+              value={editStaff?.phone ? editStaff?.phone : editPhone}
+              onChangeText={setEditPhone}
               keyboardType="phone-pad"
             />
-            <Text style={styles.inputLabel}>Date Of Birth</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="DD/MM/YYYY"
-              value={editStaff ? formatDate(editStaff.dob) : ""}
-              onChangeText={(v) =>
-                setEditStaff((s) => (s ? { ...s, dob: parseDate(v) } : s))
-              }
-            />
+
             <View style={styles.dropdownWrap}>
               <Text style={styles.dropdownLabel}>Role</Text>
               <View style={styles.dropdownBox}>
-                {roles.map((role) => (
+                {roles.map((role, index) => (
                   <TouchableOpacity
                     key={role}
                     style={[
                       styles.roleOption,
-                      editStaff?.role === role && styles.roleOptionActive,
+                      editStaff?.role === role && styles.roleOptionActive, // Highlight the selected option
+                      {
+                        backgroundColor:
+                          editStaff?.role === role ? "#FAD69C" : "transparent",
+                      }, // Set the color FAD69C for the selected option
                     ]}
-                    onPress={() =>
-                      setEditStaff((s) => (s ? { ...s, role } : s))
-                    }
+                    onPress={() => {
+                      // If there's no selected role, set it to the first role
+                      if (!editStaff?.role) {
+                        const roleValue = index === 0 ? "1" : "2"; // Set role as '1' or '2'
+                        setEditStaff((s) =>
+                          s ? { ...s, role: roleValue } : s
+                        );
+                      }
+                    }}
+                    disabled={!!editStaff?.role} // Disable if a role is already set
                   >
                     <Text
                       style={[
@@ -283,10 +276,7 @@ export default function StaffManage() {
             </View>
             <View style={styles.modalButtons}>
               {!isAddMode && (
-                <TouchableOpacity
-                  onPress={handleDelete}
-                  style={styles.deleteBtn}
-                >
+                <TouchableOpacity onPress={() => {}} style={styles.deleteBtn}>
                   <Text style={styles.deleteBtnText}>Delete</Text>
                 </TouchableOpacity>
               )}
@@ -296,10 +286,108 @@ export default function StaffManage() {
               >
                 <Text style={styles.cancelBtnText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={handleSave} style={styles.saveBtn}>
-                <Text style={styles.saveBtnText}>
-                  {isAddMode ? "Add" : "Save"}
+              <TouchableOpacity
+                onPress={handleupdateprofile}
+                style={[
+                  styles.saveBtn,
+                  editStaff?.id !== profile?.id &&
+                    editStaff?.role === "ADMIN" &&
+                    styles.saveBtnDisabled, // Apply disabled style if condition is met
+                ]}
+                disabled={
+                  editStaff?.id !== profile?.id && editStaff?.role === "ADMIN"
+                } // Disable if condition is true
+              >
+                <Text
+                  style={[
+                    styles.saveBtnText,
+                    editStaff?.id !== profile?.id &&
+                      editStaff?.role === "ADMIN" &&
+                      styles.saveBtnTextDisabled, // Apply disabled text style
+                  ]}
+                >
+                  Save
                 </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* add staff modal */}
+      <Modal visible={addModalVisible} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalTitle}>Add New Staff</Text>
+            <TouchableOpacity style={styles.avatarWrapper}>
+              <Image source={defaultAvatar} style={styles.avatarBig} />
+            </TouchableOpacity>
+            <Text style={styles.inputLabel}>Full Name</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Full Name"
+              placeholderTextColor="#999"
+              value={addName}
+              onChangeText={setAddName}
+            />
+            <Text style={styles.inputLabel}>Email</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              placeholderTextColor="#999"
+              value={addEmail}
+              onChangeText={setAddEmail}
+              keyboardType="email-address"
+            />
+            <Text style={styles.inputLabel}>Phone Number</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Phone Number"
+              placeholderTextColor="#999"
+              value={addPhone}
+              onChangeText={setAddPhone}
+              keyboardType="phone-pad"
+            />
+            <View style={styles.dropdownWrap}>
+              <Text style={styles.dropdownLabel}>Role</Text>
+              <View style={styles.dropdownBox}>
+                {roles.map((role, index) => (
+                  <TouchableOpacity
+                    key={role}
+                    style={[
+                      styles.roleOption,
+                      staffRole === role && styles.roleOptionActive, // Keep the active style for selected role
+                      {
+                        backgroundColor:
+                          staffRole === role ? "#FAD69C" : "transparent",
+                      }, // Apply color FAD69C for selected role
+                    ]}
+                    onPress={() => {
+                      const roleValue = index === 0 ? "ADMIN" : "STAFF"; // Set role to '1' or '2' based on index
+                      setStaffRole(roleValue);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.roleOptionText,
+                        addStaff?.role === role && styles.roleOptionTextActive,
+                      ]}
+                    >
+                      {role}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                onPress={() => setAddModalVisible(false)}
+                style={styles.cancelBtn}
+              >
+                <Text style={styles.cancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => {}} style={styles.saveBtn}>
+                <Text style={styles.saveBtnText}>Add</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -360,6 +448,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#888",
     marginTop: 2,
+  },
+  saveBtnTextDisabled: {
+    color: "#888", // Disabled text color
+  },
+  saveBtnDisabled: {
+    backgroundColor: "#BDBDBD", // Disabled button color
   },
   editButton: {
     padding: 8,

@@ -29,21 +29,23 @@ const initState: State = {
 
 export const useAuthStore = create(
   persist<State & Action>(
-    (set, get) => ({
+    (set) => ({
       ...initState,
-      setToken: (token: TokenPayload) => set(() => ({ token })),
-      setLoggedIn: (status: boolean) => set(() => ({ loggedIn: status })),
-      setProfile: (updatedProfile: any) =>
-        set((state) => ({
-          profile: state.profile
-            ? { ...state.profile, ...updatedProfile }
-            : updatedProfile,
-        })),
-      reset: () => set({ ...initState }),
-      rehydrated: false,
+      setToken: (token: TokenPayload) => set({ token, rehydrated: true }),
+      setLoggedIn: (status: boolean) =>
+        set({ loggedIn: status, rehydrated: true }),
+      setProfile: (profile: IUser) => set({ profile, rehydrated: true }),
+      reset: () => {
+        set({
+          token: { accessToken: "", refreshToken: "" },
+          loggedIn: false,
+          profile: null,
+          rehydrated: true, // Ensure rehydrated is true after reset
+        });
+      },
     }),
     {
-      name: "auth", // unique name
+      name: "auth",
       storage: createJSONStorage(() => localStorage),
       onRehydrateStorage: () => (state) => {
         if (state) {

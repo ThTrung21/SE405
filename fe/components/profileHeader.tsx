@@ -10,6 +10,7 @@ import {
 import { AntDesign, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { logOut } from "utils/auth";
+import { useAuthStore } from "stores/useAuthStore";
 
 interface ProfileHeaderProps {
   title: string;
@@ -17,12 +18,14 @@ interface ProfileHeaderProps {
 
 const ProfileHeader: React.FC<ProfileHeaderProps> = ({ title }) => {
   const router = useRouter();
+  const profile = useAuthStore((state) => state.profile);
   const onBackPress = () => {
     router.back(); // Go back to the previous screen
   };
   const onLogoutPress = () => {
-    router.replace("/(auth)/login");
     logOut();
+    console.log(profile);
+    router.replace("/(auth)/login");
   };
 
   return (
