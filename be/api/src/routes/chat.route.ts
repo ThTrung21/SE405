@@ -17,9 +17,9 @@ export class ChatRoute {
   private initializeRoutes() {
     this.router.post(`${this.path}/generic`, AuthMiddleware, this.chatController.createGenericChat);
     //get customer's chat
-    this.router.get(`${this.path}/conversation/:id(\\d+)`, AuthMiddleware, this.chatController.getCustomerChat);
+    this.router.get(`${this.path}/conversation/:id(\\d+)`, this.chatController.getCustomerChat);
 
-    this.router.get(`${this.path}/staffconversation/:id(\\d+)`, AuthMiddleware, this.chatController.getStaffChat);
+    this.router.get(`${this.path}/staffconversation/:id(\\d+)`, this.chatController.getStaffChat);
 
     this.router.get(`${this.path}/:conversationId/messages`, AuthMiddleware, this.chatController.getMessages);
     this.router.get(`${this.path}/:conversationId/:userId/lastmessages`, AuthMiddleware, this.chatController.getLastMessage);

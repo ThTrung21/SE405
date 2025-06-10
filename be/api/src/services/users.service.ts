@@ -9,6 +9,7 @@ import { CreateStaffDto, CreateUserDto, UpdatePasswordDto, UpdateUserDto, Update
 import { faker } from '@faker-js/faker';
 import { AVATARS } from '@/database/seeders/constants';
 import { Op } from 'sequelize';
+import { ChatService } from './chat.service';
 @Service()
 export class UserService {
   public async findAllUser(): Promise<User[]> {
@@ -20,6 +21,35 @@ export class UserService {
     });
 
     return allUser;
+  }
+  public async createUser(userData: CreateUserDto): Promise<User> {
+    const findUser: User = await DB.User.findOne({ where: { email: userData.email } });
+    if (findUser) throw new HttpException(409, `This email ${userData.email} already exists`);
+
+    const hashedPassword = await hash(userData.password, 10);
+    const createUserData: User = await DB.User.create({
+      ...userData,
+      password: hashedPassword,
+      avatar: AVATARS[faker.number.int({ min: 0, max: 1 })],
+    });
+    if (createUserData.id) {
+      console.log(`Creating generic conversation for new user ID: ${createUserData.id}`);
+      try {
+        await ChatService.createGenericConversation(createUserData.id as number); // Cast to number if your userId in ConversationModel is number
+        console.log(`Generic conversation created for user ${createUserData.id}`);
+      } catch (conversationError) {
+        console.error(`Error creating generic conversation for user ${createUserData.id}:`, conversationError);
+        // Decide how to handle this error:
+        // - Re-throw (prevents user creation if conversation fails)
+        // - Log and continue (user is created, but conversation might be missing, requiring manual fix)
+        // For most cases, creating the user is critical, so logging and continuing might be acceptable
+        // unless the conversation is strictly required for basic user functionality.
+      }
+    } else {
+      console.warn('User ID not available after creation, cannot create generic conversation.');
+    }
+
+    return createUserData;
   }
 
   public async findAllUserForSeed(): Promise<User[]> {
@@ -82,18 +112,6 @@ export class UserService {
       avatar: AVATARS[faker.number.int({ min: 0, max: 1 })],
     });
     return createStaffData;
-  }
-  public async createUser(userData: CreateUserDto): Promise<User> {
-    const findUser: User = await DB.User.findOne({ where: { email: userData.email } });
-    if (findUser) throw new HttpException(409, `This email ${userData.email} already exists`);
-
-    const hashedPassword = await hash(userData.password, 10);
-    const createUserData: User = await DB.User.create({
-      ...userData,
-      password: hashedPassword,
-      avatar: AVATARS[faker.number.int({ min: 0, max: 1 })],
-    });
-    return createUserData;
   }
 
   public async updateUser(userId: number, userData: UpdateUserDto): Promise<User> {
