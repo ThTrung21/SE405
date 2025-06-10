@@ -96,7 +96,38 @@ export class ProductService {
     const createProductData: Product = await DB.Product.create({ ...product, brandId: productBrandId });
     return createProductData;
   }
+  public async updateProductLike(productId: number): Promise<Product> {
+    const findProduct: Product = await DB.Product.findByPk(productId);
+    if (!findProduct) throw new HttpException(409, "Product doesn't exist");
 
+    // Increment the score by 1
+    const newScore = findProduct.score + 1;
+
+    // Ensure score doesn't go below 0
+    const safeScore = Math.max(newScore, 0);
+
+    // Update product score
+    await DB.Product.update({ score: safeScore }, { where: { id: productId } });
+
+    const updatedProduct: Product = await DB.Product.findByPk(productId);
+    return updatedProduct;
+  }
+  public async updateProductLike2(productId: number): Promise<Product> {
+    const findProduct: Product = await DB.Product.findByPk(productId);
+    if (!findProduct) throw new HttpException(409, "Product doesn't exist");
+
+    // Increment the score by 1
+    const newScore = findProduct.score - 1;
+
+    // Ensure score doesn't go below 0
+    const safeScore = Math.max(newScore, 0);
+
+    // Update product score
+    await DB.Product.update({ score: safeScore }, { where: { id: productId } });
+
+    const updatedProduct: Product = await DB.Product.findByPk(productId);
+    return updatedProduct;
+  }
   //update
   public async updateProduct(productId: number, productData: UpdateProductDto): Promise<Product> {
     const findProduct: Product = await DB.Product.findByPk(productId);

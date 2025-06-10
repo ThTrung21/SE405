@@ -4,6 +4,7 @@ import { User } from '@interfaces/users.interface';
 import { UserService } from '@services/users.service';
 import { CreateUserDto, CreateStaffDto } from '@dtos/users.dto';
 import { RequestWithUser } from '@/interfaces/auth.interface';
+import { logger } from '@/utils/logger';
 
 export class UserController {
   public user = Container.get(UserService);
@@ -99,6 +100,7 @@ export class UserController {
   public updateLikedProduct = async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
       const { user } = req;
+      logger.info('REEEEE', req);
       const a = await this.user.updatedLikedProduct(user.getDataValue('id'), req.body);
 
       res.status(200).json({ data: a, message: 'liked dish updated' });

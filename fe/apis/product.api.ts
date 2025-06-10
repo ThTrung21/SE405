@@ -2,38 +2,43 @@ import { categories } from "app/(dashboard)/homepage";
 import httpRequest from "../services/httpRequest";
 
 export const getAllProducts = () => {
-  return httpRequest.get("/products");
+	return httpRequest.get("/products");
 };
 export const getTenProducts = () => {
-  return httpRequest.get("/products/ten");
+	return httpRequest.get("/products/ten");
 };
 export const searchProductsByName = (value: string) => {
-  return httpRequest.get("/products/search", {
-    params: {
-      keyword: value,
-    },
-  });
+	return httpRequest.get("/products/search", {
+		params: {
+			keyword: value,
+		},
+	});
 };
 
 export const createNewProduct = (data: any) => {
-  return httpRequest.post("/products", data);
+	return httpRequest.post("/products", data);
 };
 export const getFilteredProduct = (categoryId: number) => {
-  return httpRequest.get(`/products/filtered/${categoryId}`);
+	return httpRequest.get(`/products/filtered/${categoryId}`);
 };
 export const getProductById = (productId: string | number) => {
-  return httpRequest.get(`/products/${productId}`);
+	return httpRequest.get(`/products/${productId}`);
 };
 export const getProductsByIds = async (ids: number[]) => {
-  return httpRequest.post("/products/getByIds", { ids });
+	return httpRequest.post("/products/getByIds", { ids });
 };
 
 export const updateProductById = (productId: string | number, data: any) => {
-  return httpRequest.put(`/products/${productId}`, data);
+	return httpRequest.put2(`/products/${productId}`, data);
 };
-
+export const updateProductLike = (productId: string | number) => {
+	return httpRequest.put2(`/products/like/${productId}`);
+};
+export const updateProductLike2 = (productId: string | number) => {
+	return httpRequest.put2(`/products/like2/${productId}`);
+};
 export const deleteProductById = (productId: string | number) => {
-  return httpRequest.delete(`/products/${productId}`);
+	return httpRequest.delete(`/products/${productId}`);
 };
 
 // export const getAllReviews = (productId: string | number) => {

@@ -37,6 +37,29 @@ export class ProductController {
       next(error);
     }
   };
+  public updateProductLike = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const productId = Number(req.params.id);
+
+      const updateScore: Product = await this.product.updateProductLike(productId);
+
+      res.status(200).json({ data: updateScore, message: 'updated +' });
+    } catch (error) {
+      next(error);
+    }
+  };
+  public updateProductLike2 = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const productId = Number(req.params.id);
+
+      const updateScore: Product = await this.product.updateProductLike2(productId);
+
+      res.status(200).json({ data: updateScore, message: 'updated -' });
+    } catch (error) {
+      next(error);
+    }
+  };
+
   public getProductByCategory = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const categoryId = Number(req.params.id);

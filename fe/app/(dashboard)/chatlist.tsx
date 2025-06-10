@@ -128,7 +128,7 @@ export default function ChatListScreen() {
 				console.log(enriched);
 				setConversations(enriched);
 			};
-			if (profile) setCurrentRole(profile?.role.toString());
+			if (profile) setCurrentRole(profile.role.toString());
 			console.log("Role: ", currentRole);
 			if (currentRole === "CUSTOMER") fetchDataCustomer();
 			else if (currentRole === "ADMIN" || currentRole === "STAFF")

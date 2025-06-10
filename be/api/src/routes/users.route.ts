@@ -19,7 +19,7 @@ export class UserRoute implements Routes {
     this.router.get(`${this.path}/profile`, AuthMiddleware, this.user.getProfile);
     this.router.put(`${this.path}/profile`, AuthMiddleware, ValidationMiddleware(UpdateUserDto, true), this.user.updateProfile);
     this.router.patch(`${this.path}/change-password`, AuthMiddleware, ValidationMiddleware(UpdatePasswordDto, true), this.user.updatePassword);
-    this.router.patch(`${this.path}/update-like`, AuthMiddleware, ValidationMiddleware(UpdateUserLikeDto, true), this.user.updateLikedProduct);
+    this.router.patch(`${this.path}/update-like`, AuthMiddleware, this.user.updateLikedProduct);
 
     // admin
     this.router.get(`${this.path}`, AuthMiddleware, AdminCheckMiddleware, this.user.getUsers);
