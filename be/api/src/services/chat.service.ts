@@ -1,9 +1,11 @@
 import { Op } from 'sequelize';
 import { ConversationModel } from '@/models/conversations.model';
 import { MessageModel } from '../models/messages.model';
-import { ChatStatus, ChatType } from '../interfaces/conversation.interface';
+import { ChatStatus, ChatType, Conversation } from '../interfaces/conversation.interface';
 import { Status } from '@/interfaces/auth.interface';
 import { UserModel } from '../models/users.model';
+import { DB } from '@/database';
+import { HttpException } from '@/exceptions/HttpException';
 
 export class ChatService {
   // Generic Chat Creation
@@ -13,54 +15,43 @@ export class ChatService {
         userId,
         type: ChatType.GENERIC,
         status: ChatStatus.ACTIVE,
-        expiresAt: { [Op.gt]: new Date() },
       },
     });
     if (existing) return existing;
 
-    const onlineStaff = await UserModel.findOne({
-      where: { role: 'STAFF', status: Status.ACTIVE },
-      order: [['lastAssignedAt', 'ASC']], // Optional round robin
-    });
-
-    if (!onlineStaff) throw new Error('No staff online currently');
-
-    await onlineStaff.update({ lastAssignedAt: new Date() });
-
-    const expiration = new Date();
-    expiration.setHours(expiration.getHours() + 2);
-
     return await ConversationModel.create({
       userId,
-      staffId: onlineStaff.id,
       type: ChatType.GENERIC,
       status: ChatStatus.ACTIVE,
-      expiresAt: expiration,
     });
   }
-
-  // Order-bound Chat Creation
-  public static async createOrderConversation(userId: number, orderId: number): Promise<ConversationModel> {
-    const existing = await ConversationModel.findOne({ where: { userId, orderId } });
-    if (existing) return existing;
-
-    const staff = await UserModel.findOne({
-      where: { role: 'STAFF', status: Status.ACTIVE },
-      order: [['lastAssignedAt', 'ASC']],
+  //get chats for staff: staff is part of conversation or chat where chatid=null
+  public static async getStaffChats(_userId: number): Promise<ConversationModel[]> {
+    const findChat: ConversationModel[] = await DB.Conversation.findAll({
+      where: {
+        [Op.or]: [
+          { userId: { [Op.ne]: _userId } }, // userId should not be equal to _userId
+          { staffId: _userId }, // staffId should be equal to _userId
+          { staffId: { [Op.is]: null } }, // staffId should be null
+        ],
+      },
     });
+    console.log(_userId);
+    if (!findChat) throw new HttpException(409, "No conversation doesn't exist");
 
-    if (!staff) throw new Error('No available staff');
-
-    await staff.update({ lastAssignedAt: new Date() });
-
-    return await ConversationModel.create({
-      userId,
-      staffId: staff.id,
-      orderId,
-      type: ChatType.ORDERBOUND,
-      status: ChatStatus.ACTIVE,
-      expiresAt: null, // Will be set after confirmation
+    return findChat;
+  }
+  //get customer's chat
+  public static async getCustomerChat(_userId: number): Promise<ConversationModel> {
+    const findChat: ConversationModel = await DB.Conversation.findOne({
+      where: {
+        userId: _userId,
+      },
     });
+    console.log(_userId);
+    if (!findChat) throw new HttpException(409, "No conversation doesn't exist");
+
+    return findChat;
   }
 
   // Expire a conversation manually
@@ -90,6 +81,15 @@ export class ChatService {
     return await MessageModel.findAll({
       where: { conversationId },
       order: [['createdAt', 'ASC']],
+    });
+  }
+  public static async getLastMessage(_conversationId: number, _userId: number): Promise<MessageModel | null> {
+    return await MessageModel.findOne({
+      where: {
+        conversationId: _conversationId,
+        senderId: _userId, // Only messages sent by this user
+      },
+      order: [['createdAt', 'DESC']], // Latest message first
     });
   }
 

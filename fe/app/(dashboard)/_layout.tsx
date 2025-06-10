@@ -6,86 +6,87 @@ import { TouchableOpacity, View, StyleSheet } from "react-native";
 import { BottomTabBarButtonProps } from "@react-navigation/bottom-tabs";
 
 function CustomTabBarButton({
-  children,
-  onPress,
-  accessibilityState,
+	children,
+	onPress,
+	accessibilityState,
 }: BottomTabBarButtonProps) {
-  const isSelected = accessibilityState?.selected;
+	const isSelected = accessibilityState?.selected;
 
-  return (
-    <TouchableOpacity
-      style={styles.tabButtonWrapper}
-      onPress={onPress}
-      activeOpacity={0.6} // softer press animation
-    >
-      <View style={[styles.iconWrapper, isSelected && styles.activeTab]}>
-        {children}
-      </View>
-    </TouchableOpacity>
-  );
+	return (
+		<TouchableOpacity
+			style={styles.tabButtonWrapper}
+			onPress={onPress}
+			activeOpacity={0.6} // softer press animation
+		>
+			<View style={[styles.iconWrapper, isSelected && styles.activeTab]}>
+				{children}
+			</View>
+		</TouchableOpacity>
+	);
 }
 
 export default function RootLayout() {
-  return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarShowLabel: false,
-        tabBarStyle: {
-          height: 85,
-          paddingBottom: 40,
-          borderTopWidth: 0.5,
-          borderTopColor: "#ccc",
-        },
-        tabBarButton: (props) => <CustomTabBarButton {...props} />,
-        // tabBarButton: (props: BottomTabBarButtonProps) => (
-        // <TouchableOpacity
-        //   {...props}
-        //   style={styles.tabButton}
-        // activeOpacity={0.7}
-        // >
-        //   {props.children}
-        // </TouchableOpacity>
-        // ),
-      }}
-    >
-      <Tabs.Screen
-        name="homepage"
-        options={{
-          tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons
-              name={focused ? "home" : "home-outline"}
-              size={24}
-              color={focused ? "#FAD69C" : "#888"}
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="favorites"
-        options={{
-          tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons
-              name={focused ? "bookmark" : "bookmark-outline"}
-              size={24}
-              color={focused ? "#FAD69C" : "#888"}
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="chatlist"
-        options={{
-          tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons
-              name={focused ? "chatbubbles" : "chatbubbles-outline"}
-              size={24}
-              color={focused ? "#FAD69C" : "#888"}
-            />
-          ),
-        }}
-      />
-      {/* <Tabs.Screen
+	return (
+		<Tabs
+			screenOptions={{
+				headerShown: false,
+				tabBarShowLabel: false,
+				tabBarStyle: {
+					height: 85,
+					paddingBottom: 40,
+					borderTopWidth: 0.5,
+					borderTopColor: "#ccc",
+				},
+				tabBarButton: (props) => <CustomTabBarButton {...props} />,
+				// tabBarButton: (props: BottomTabBarButtonProps) => (
+				// <TouchableOpacity
+				//   {...props}
+				//   style={styles.tabButton}
+				// activeOpacity={0.7}
+				// >
+				//   {props.children}
+				// </TouchableOpacity>
+				// ),
+			}}
+		>
+			<Tabs.Screen
+				name="homepage"
+				options={{
+					tabBarIcon: ({ color, size, focused }) => (
+						<Ionicons
+							name={focused ? "home" : "home-outline"}
+							size={24}
+							color={focused ? "#FAD69C" : "#888"}
+						/>
+					),
+				}}
+			/>
+			<Tabs.Screen
+				name="favorites"
+				options={{
+					tabBarIcon: ({ color, size, focused }) => (
+						<Ionicons
+							name={focused ? "bookmark" : "bookmark-outline"}
+							size={24}
+							color={focused ? "#FAD69C" : "#888"}
+						/>
+					),
+				}}
+			/>
+			<Tabs.Screen
+				name="chatlist"
+				options={{
+					unmountOnBlur: true,
+					tabBarIcon: ({ color, size, focused }) => (
+						<Ionicons
+							name={focused ? "chatbubbles" : "chatbubbles-outline"}
+							size={24}
+							color={focused ? "#FAD69C" : "#888"}
+						/>
+					),
+				}}
+			/>
+			{/* <Tabs.Screen
         name="notifications"
         options={{
           tabBarIcon: ({ color, size, focused }) => (
@@ -97,7 +98,7 @@ export default function RootLayout() {
           ),
         }}
       /> */}
-      {/* <Tabs.Screen
+			{/* <Tabs.Screen
         name="manage"
         options={{
           tabBarIcon: ({ color, size, focused }) => (
@@ -109,41 +110,41 @@ export default function RootLayout() {
           ),
         }}
       /> */}
-      <Tabs.Screen
-        name="profile"
-        options={{
-          tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons
-              name={focused ? "person" : "person-outline"}
-              size={24}
-              color={focused ? "#FAD69C" : "#888"}
-            />
-          ),
-        }}
-      />
-    </Tabs>
-  );
+			<Tabs.Screen
+				name="profile"
+				options={{
+					tabBarIcon: ({ color, size, focused }) => (
+						<Ionicons
+							name={focused ? "person" : "person-outline"}
+							size={24}
+							color={focused ? "#FAD69C" : "#888"}
+						/>
+					),
+				}}
+			/>
+		</Tabs>
+	);
 }
 
 const styles = StyleSheet.create({
-  tabButtonWrapper: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  iconWrapper: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  tabButton: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  activeTab: {
-    backgroundColor: "#FAD69C44", // soft orange highlight for active tab
-  },
+	tabButtonWrapper: {
+		flex: 1,
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	iconWrapper: {
+		width: 40,
+		height: 40,
+		borderRadius: 20,
+		justifyContent: "center",
+		alignItems: "center",
+	},
+	tabButton: {
+		flex: 1,
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	activeTab: {
+		backgroundColor: "#FAD69C44", // soft orange highlight for active tab
+	},
 });

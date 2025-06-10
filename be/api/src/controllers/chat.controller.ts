@@ -1,11 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
 import { ChatService } from '../services/chat.service';
+import { Conversation } from '@/interfaces/conversation.interface';
+import Container from 'typedi';
+import { ConversationModel } from '@/models/conversations.model';
+import { logger } from '@/utils/logger';
 
 export class ChatController {
   // Create a generic chat (user asks a question)
+
   public createGenericChat = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const userId = Number(req.params.id);
+      const userId = Number(req.body.userId);
       const conversation = await ChatService.createGenericConversation(userId);
       res.status(201).json({ data: conversation, message: 'Generic chat created' });
     } catch (error) {
@@ -13,13 +18,22 @@ export class ChatController {
     }
   };
 
-  // Create an order-bound chat
-  public createOrderChat = async (req: Request, res: Response, next: NextFunction) => {
+  public getStaffChat = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const staffId = Number(req.params.id);
+      const getStaffChats: ConversationModel[] = await ChatService.getStaffChats(staffId);
+
+      res.status(200).json({ data: getStaffChats, message: 'findMany' });
+    } catch (error) {
+      next(error);
+    }
+  };
+  public getCustomerChat = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = Number(req.params.id);
-      const { orderId } = req.body;
-      const conversation = await ChatService.createOrderConversation(userId, orderId);
-      res.status(201).json({ data: conversation, message: 'Order chat created' });
+      const getCustomerChat: ConversationModel = await ChatService.getCustomerChat(userId);
+
+      res.status(200).json({ data: getCustomerChat, message: 'findOne' });
     } catch (error) {
       next(error);
     }
@@ -46,12 +60,22 @@ export class ChatController {
       next(error);
     }
   };
+  public getLastMessage = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { conversationId, userId } = req.params;
 
+      const messages = await ChatService.getLastMessage(Number(conversationId), Number(userId));
+      logger.info('ooga', messages);
+      res.status(200).json({ data: messages, message: 'Messages fetched' });
+    } catch (error) {
+      next(error);
+    }
+  };
   // Send a message in a conversation
   public sendMessage = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { conversationId, productId, content } = req.body;
-      const senderId = Number(req.params.id);
+      const { senderId, conversationId, productId, content } = req.body;
+      // const senderId = Number(req.params.id);
       const message = await ChatService.saveMessage({ conversationId, senderId, productId, content });
       res.status(201).json({ data: message, message: 'Message sent' });
     } catch (error) {

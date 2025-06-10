@@ -29,7 +29,6 @@ const appInstance = new App([
 const expressApp = appInstance.getServer();
 const server = http.createServer(expressApp);
 
-// 🔌 Initialize WebSocket
 initWebSocket(server);
 
 const PORT = process.env.PORT || 3000;
