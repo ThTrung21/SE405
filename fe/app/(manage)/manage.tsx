@@ -81,17 +81,19 @@ export default function ManageScreen() {
   const profile = useAuthStore((state) => state.profile);
   const loggedIn = useAuthStore((state) => state.loggedIn);
   const [userRole, setUserRole] = useState("");
-  const rehydrated = useAuthStore((state) => state.rehydrated);
+  // const rehydrated = useAuthStore((state) => state.rehydrated);
   useEffect(() => {
-    if (rehydrated && (!loggedIn || !profile)) {
+    // if (rehydrated && (!loggedIn || !profile)) {
+    if (!loggedIn || !profile) {
       router.replace("/(auth)/login");
     }
     console.log(profile);
     if (profile) {
       setUserRole(profile.role);
     }
-  }, [rehydrated, loggedIn, profile]);
-  if (!rehydrated || !loggedIn || !profile) return null;
+  }, [loggedIn, profile]);
+  // }, [rehydrated, loggedIn, profile]);
+  // if (!rehydrated || !loggedIn || !profile) return null;
 
   let renderoption;
   if (profile?.role === "STAFF") renderoption = options2;

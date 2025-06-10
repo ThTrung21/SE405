@@ -41,7 +41,7 @@ export default function ProfileScreen() {
   const [editModal, setEditModal] = useState(false);
   const [passwordModal, setPasswordModal] = useState(false);
   const loggedIn = useAuthStore((state) => state.loggedIn);
-  const rehydrated = useAuthStore((state) => state.rehydrated);
+  // const rehydrated = useAuthStore((state) => state.rehydrated);
   const isLoading = useAppStore((state) => state.isLoading);
   const setIsLoading = useAppStore((state) => state.setIsLoading);
   const [role, setRole] = useState("");
@@ -65,7 +65,8 @@ export default function ProfileScreen() {
         alert("Permission to access media library is required!");
       }
     })();
-    if (rehydrated && (!loggedIn || !profile)) {
+    if (!loggedIn || !profile) {
+      // if (rehydrated && (!loggedIn || !profile)) {
       router.replace("/(auth)/login");
     }
 
@@ -84,7 +85,7 @@ export default function ProfileScreen() {
 
       setCurrentPassword(profile?.password || "");
     }
-  }, [rehydrated, loggedIn, profile]);
+  }, [loggedIn, profile]);
 
   const pickAvatar = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -187,6 +188,7 @@ export default function ProfileScreen() {
       setIsLoading(false);
     }
   };
+  const avatarURI = profile?.avatar ? profile?.avatar : defaultAvatar;
   const isStaff =
     loggedIn && (profile?.role === "ADMIN" || profile?.role === "STAFF");
   const onOrdersPress = () => {
@@ -205,12 +207,7 @@ export default function ProfileScreen() {
               style={styles.avatarWrapper}
               onPress={() => setEditModal(true)}
             >
-              <Image
-                source={
-                  profile?.avatar ? { uri: profile?.avatar } : defaultAvatar
-                }
-                style={styles.avatar}
-              />
+              <Image source={{ uri: avatarURI }} style={styles.avatar} />
               <View style={styles.avatarEditIcon}>
                 <MaterialIcons name="edit" size={20} color="#fff" />
               </View>
@@ -290,12 +287,7 @@ export default function ProfileScreen() {
           <View style={styles.modalBox}>
             <Text style={styles.modalTitle}>Edit Personal Information</Text>
             <TouchableOpacity style={styles.avatarWrapper} onPress={pickAvatar}>
-              <Image
-                source={
-                  profile?.avatar ? { uri: profile?.avatar } : defaultAvatar
-                }
-                style={styles.avatar}
-              />
+              <Image source={{ uri: avatarURI }} style={styles.avatar} />
               <View style={styles.avatarEditIcon}>
                 <Ionicons name="camera" size={20} color="#fff" />
               </View>

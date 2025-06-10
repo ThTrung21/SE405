@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { ChatService } from '../services/chat.service';
 import { Conversation } from '@/interfaces/conversation.interface';
 import Container from 'typedi';
-import { ConversationModel } from '@/models/conversations.model';
+
 import { logger } from '@/utils/logger';
 
 export class ChatController {
@@ -21,7 +21,7 @@ export class ChatController {
   public getStaffChat = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const staffId = Number(req.params.id);
-      const getStaffChats: ConversationModel[] = await ChatService.getStaffChats(staffId);
+      const getStaffChats: Conversation[] = await ChatService.getStaffChats(staffId);
 
       res.status(200).json({ data: getStaffChats, message: 'findMany' });
     } catch (error) {
@@ -31,7 +31,8 @@ export class ChatController {
   public getCustomerChat = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = Number(req.params.id);
-      const getCustomerChat: ConversationModel = await ChatService.getCustomerChat(userId);
+      logger.info(req);
+      const getCustomerChat: Conversation = await ChatService.getCustomerChat(userId);
 
       res.status(200).json({ data: getCustomerChat, message: 'findOne' });
     } catch (error) {

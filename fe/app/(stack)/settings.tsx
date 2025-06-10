@@ -45,7 +45,7 @@ const SettingsScreen = (): JSX.Element => {
   const [avatar, setAvatar] = useState<string | null>(null);
   const [editModal, setEditModal] = useState(false);
   const loggedIn = useAuthStore((state) => state.loggedIn);
-  const rehydrated = useAuthStore((state) => state.rehydrated);
+  // const rehydrated = useAuthStore((state) => state.rehydrated);
   const isLoading = useAppStore((state) => state.isLoading);
   const setIsLoading = useAppStore((state) => state.setIsLoading);
 
@@ -64,10 +64,10 @@ const SettingsScreen = (): JSX.Element => {
         alert("Permission to access media library is required!");
       }
     })();
-    if (!rehydrated) {
-      // Auth state is still being rehydrated
-      return;
-    }
+    // if (!rehydrated) {
+    //   // Auth state is still being rehydrated
+    //   return;
+    // }
     console.log(profile?.avatar);
     if (!loggedIn) {
       router.push("/(auth)/login");
@@ -78,7 +78,7 @@ const SettingsScreen = (): JSX.Element => {
       setEditName(profile.fullname || "");
       setEditEmail(profile.email || "");
     }
-  }, [loggedIn, rehydrated]);
+  }, [loggedIn]);
   const pickAvatar = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,

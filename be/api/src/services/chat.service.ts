@@ -6,11 +6,12 @@ import { Status } from '@/interfaces/auth.interface';
 import { UserModel } from '../models/users.model';
 import { DB } from '@/database';
 import { HttpException } from '@/exceptions/HttpException';
+import { logger } from '@/utils/logger';
 
 export class ChatService {
   // Generic Chat Creation
   public static async createGenericConversation(userId: number): Promise<ConversationModel> {
-    const existing = await ConversationModel.findOne({
+    const existing = await DB.Conversation.findOne({
       where: {
         userId,
         type: ChatType.GENERIC,
@@ -19,20 +20,20 @@ export class ChatService {
     });
     if (existing) return existing;
 
-    return await ConversationModel.create({
+    return await DB.Conversation.create({
       userId,
       type: ChatType.GENERIC,
       status: ChatStatus.ACTIVE,
     });
   }
   //get chats for staff: staff is part of conversation or chat where chatid=null
-  public static async getStaffChats(_userId: number): Promise<ConversationModel[]> {
-    const findChat: ConversationModel[] = await DB.Conversation.findAll({
+  public static async getStaffChats(_userId: number): Promise<Conversation[]> {
+    const findChat: Conversation[] = await DB.Conversation.findAll({
       where: {
         [Op.or]: [
           { userId: { [Op.ne]: _userId } }, // userId should not be equal to _userId
-          { staffId: _userId }, // staffId should be equal to _userId
-          { staffId: { [Op.is]: null } }, // staffId should be null
+          // staffId should be equal to _userId
+          // { staffId: { [Op.is]: null } }, // staffId should be null
         ],
       },
     });
@@ -42,15 +43,15 @@ export class ChatService {
     return findChat;
   }
   //get customer's chat
-  public static async getCustomerChat(_userId: number): Promise<ConversationModel> {
-    const findChat: ConversationModel = await DB.Conversation.findOne({
+  public static async getCustomerChat(_userId: number): Promise<Conversation> {
+    const findChat: Conversation = await DB.Conversation.findOne({
       where: {
         userId: _userId,
       },
     });
-    console.log(_userId);
+    logger.info(_userId);
     if (!findChat) throw new HttpException(409, "No conversation doesn't exist");
-
+    logger.info(findChat);
     return findChat;
   }
 
@@ -68,7 +69,7 @@ export class ChatService {
 
   // Save a message to a conversation
   public static async saveMessage(data: { conversationId: number; senderId: number; productId?: number; content: string }): Promise<MessageModel> {
-    return await MessageModel.create({
+    return await DB.Message.create({
       conversationId: data.conversationId,
       senderId: data.senderId,
       productId: data.productId,
@@ -78,13 +79,13 @@ export class ChatService {
 
   // Get all messages in a conversation
   public static async getMessages(conversationId: number): Promise<MessageModel[]> {
-    return await MessageModel.findAll({
+    return await DB.Message.findAll({
       where: { conversationId },
       order: [['createdAt', 'ASC']],
     });
   }
   public static async getLastMessage(_conversationId: number, _userId: number): Promise<MessageModel | null> {
-    return await MessageModel.findOne({
+    return await DB.Message.findOne({
       where: {
         conversationId: _conversationId,
         senderId: _userId, // Only messages sent by this user
@@ -94,13 +95,13 @@ export class ChatService {
   }
 
   // Get conversation by ID
-  public static async getConversation(id: number): Promise<ConversationModel | null> {
-    return await ConversationModel.findByPk(id);
+  public static async getConversation(id: number): Promise<Conversation | null> {
+    return await DB.Conversation.findByPk(id);
   }
 
   // Check and expire conversations that are past expiresAt
   public static async expireOldConversations(): Promise<void> {
-    await ConversationModel.update(
+    await DB.Conversation.update(
       { status: ChatStatus.EXPIRED },
       {
         where: {

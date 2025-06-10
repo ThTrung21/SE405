@@ -24,7 +24,7 @@ export default function CheckoutScreen() {
   const router = useRouter();
   const [promoCode, setPromoCode] = useState("");
   const loggedIn = useAuthStore((state) => state.loggedIn);
-  const rehydrated = useAuthStore((state) => state.rehydrated);
+  // const rehydrated = useAuthStore((state) => state.rehydrated);
   const userProfile = useAuthStore((state) => state.profile);
   const [data, setData] = useState<ICart[]>([]);
 
@@ -50,7 +50,8 @@ export default function CheckoutScreen() {
   };
 
   useEffect(() => {
-    if (!rehydrated || !orders) {
+    // if (!rehydrated || !orders) {
+    if (!orders) {
       // Auth state is still being rehydrated
       return;
     }
@@ -74,7 +75,8 @@ export default function CheckoutScreen() {
       setOrderTotal(parsed.total);
     }
     setIsLoading(false);
-  }, [loggedIn, rehydrated]);
+    // }, [loggedIn, rehydrated]);
+  }, [loggedIn]);
   const deliveryFee = 5;
   const total = orderTotal + deliveryFee;
 
