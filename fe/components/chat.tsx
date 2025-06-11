@@ -91,7 +91,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation, productId }) => {
 			const res = await sendMessage({ ...newMessage, productId: productId });
 			const savedMessage = res.data.data;
 			// Emit via socket instead of (or in addition to) HTTP
-			socketRef.current?.emit("sendMessage", savedMessage);
+			// socketRef.current?.emit("sendMessage", savedMessage);
 
 			loadMessages();
 			setInput("");
@@ -120,31 +120,31 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation, productId }) => {
 		}
 	}, [productId, conversation?.id]);
 	//init
-	useFocusEffect(
-		useCallback(() => {
-			if (!conversation?.id) return;
+	// useFocusEffect(
+	// 	useCallback(() => {
+	// 		if (!conversation?.id) return;
 
-			const socket = initSocket();
-			socketRef.current = socket;
-			const conversationRoom = `conversation-${conversation.id}`;
+	// 		const socket = initSocket();
+	// 		// socketRef.current = socket;
+	// 		const conversationRoom = `conversation-${conversation.id}`;
 
-			socket!.on("connect", () => {
-				socket!.emit("joinConversation", conversation.id); // join the correct room
-				console.log("Joined room:", conversationRoom);
-				setSocketReady(true);
-			});
+	// 		socket!.on("connect", () => {
+	// 			socket!.emit("joinConversation", conversation.id); // join the correct room
+	// 			console.log("Joined room:", conversationRoom);
+	// 			setSocketReady(true);
+	// 		});
 
-			socket!.on("newMessage", (newMsg: IMessage) => {
-				console.log("New message received via socket:", newMsg);
-				setMessages((prev) => [...prev, newMsg]);
-			});
+	// 		socket!.on("newMessage", (newMsg: IMessage) => {
+	// 			console.log("New message received via socket:", newMsg);
+	// 			setMessages((prev) => [...prev, newMsg]);
+	// 		});
 
-			return () => {
-				socket!.off("newMessage");
-				socket!.disconnect();
-			};
-		}, [conversation?.id])
-	);
+	// 		return () => {
+	// 			socket!.off("newMessage");
+	// 			socket!.disconnect();
+	// 		};
+	// 	}, [conversation?.id])
+	// );
 
 	useEffect(() => {
 		if (conversation?.id && rehydrated) {

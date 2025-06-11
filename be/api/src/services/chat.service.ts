@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Op } from 'sequelize';
 import { ConversationModel } from '@/models/conversations.model';
 import { MessageModel } from '../models/messages.model';
@@ -25,17 +26,31 @@ export class ChatService {
       status: ChatStatus.ACTIVE,
     });
   }
+
+  public static async findAllChats(): Promise<Conversation[]> {
+      const products = await DB.Conversation.findAll({
+          attributes: {
+            // exclude: ['createdAt', 'updatedAt', 'deletedAt'],
+            include: [],
+          },
+        });
+        return products;
+    }
+
   //get chats for staff: staff is part of conversation or chat where chatid=null
   public static async getStaffChats(_userId: number): Promise<ConversationModel[]> {
-    const findChat: ConversationModel[] = await DB.Conversation.findAll({
-      where: {
-        [Op.or]: [
-          { userId: { [Op.ne]: _userId } }, // userId should not be equal to _userId
-          { staffId: _userId }, // staffId should be equal to _userId
-          { staffId: { [Op.is]: null } }, // staffId should be null
-        ],
-      },
-    });
+    let findChat;
+    if (_userId != null)
+      findChat = await DB.Conversation.findAll({
+        where: {
+          [Op.or]: [
+            { userId: { [Op.ne]: _userId } }, // userId should not be equal to _userId
+            { staffId: _userId }, // staffId should be equal to _userId
+            { staffId: { [Op.is]: null } }, // staffId should be null
+          ],
+        },
+      });
+    else findChat = await DB.Conversation.findAll();
     console.log(_userId);
     if (!findChat) throw new HttpException(409, "No conversation doesn't exist");
 

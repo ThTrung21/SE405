@@ -16,6 +16,7 @@ import ConversationScreen from "app/chat/conversations";
 import { useConversationStore } from "stores/useConversationStore";
 import {
   createGenericConversation,
+  getChats,
   getCustomerChat,
   getLastMessage,
   getStaffChat,
@@ -103,11 +104,18 @@ export default function ChatListScreen() {
         console.log(enriched);
         setConversations(enriched);
       };
-      if (profile) setCurrentRole(profile.role.toString());
-      console.log("Role: ", currentRole);
-      if (currentRole === "CUSTOMER") fetchDataCustomer();
-      else if (currentRole === "ADMIN" || currentRole === "STAFF")
-        fetchDataStaff();
+      const  fetchChats = async () =>{
+        const a = await getChats();
+        setConversations(a.data)
+       
+      };
+      // if (profile) setCurrentRole(profile.role.toString());
+      // console.log("Role: ", currentRole);
+      // if (currentRole === "CUSTOMER") fetchDataCustomer();
+      // else if (currentRole === "ADMIN" || currentRole === "STAFF")
+      //   fetchDataStaff();
+      fetchChats();
+      
       // console.log(conversations);
     }, [profile])
   );
@@ -139,25 +147,26 @@ export default function ChatListScreen() {
 
   const iscustomer = currentRole.toString() === "CUSTOMER" ? true : false;
   return (
-    <>
-      {iscustomer ? (
-        <ChatScreen conversation={selectedConversation!} />
-      ) : openConversation && selectedConversation ? (
-        <ChatScreen conversation={selectedConversation!} />
-      ) : (
-        <View style={styles.container}>
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>Chats</Text>
-          </View>
-          <FlatList
-            data={conversations}
-            renderItem={renderChatItem}
-            keyExtractor={(item) => item.id.toString()}
-            contentContainerStyle={styles.listContainer}
-          />
-        </View>
-      )}
-    </>
+    <ChatScreen conversation={conversations[0]}/>
+    // <>
+    //   {iscustomer ? (
+    //     <ChatScreen conversation={selectedConversation!} />
+    //   ) : openConversation && selectedConversation ? (
+    //     <ChatScreen conversation={selectedConversation!} />
+    //   ) : (
+    //     <View style={styles.container}>
+    //       <View style={styles.header}>
+    //         <Text style={styles.headerTitle}>Chats</Text>
+    //       </View>
+    //       <FlatList
+    //         data={conversations}
+    //         renderItem={renderChatItem}
+    //         keyExtractor={(item) => item.id.toString()}
+    //         contentContainerStyle={styles.listContainer}
+    //       />
+    //     </View>
+    //   )}
+    // </>
   );
 }
 

@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Request, Response, NextFunction } from 'express';
 import { ChatService } from '../services/chat.service';
 import { Conversation } from '@/interfaces/conversation.interface';
@@ -7,7 +8,15 @@ import { logger } from '@/utils/logger';
 
 export class ChatController {
   // Create a generic chat (user asks a question)
+  public getChats = async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const findAllProductsData: Conversation[] = await ChatService.findAllChats();
 
+        res.status(200).json({ data: findAllProductsData, message: 'findAll' });
+      } catch (error) {
+        next(error);
+      }
+    };
   public createGenericChat = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = Number(req.body.userId);

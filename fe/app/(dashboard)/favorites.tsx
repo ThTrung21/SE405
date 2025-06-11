@@ -22,6 +22,7 @@ import { useProductStore } from "stores/useProductStore";
 import { getAllProducts } from "apis/product.api";
 import { IProduct } from "interfaces/IProduct";
 import { IUser } from "interfaces/IUser";
+import { getUserById } from "apis/user.api";
 
 const FavoritesScreen: React.FC = () => {
   const [showSearch, setShowSearch] = useState(false);
@@ -48,10 +49,12 @@ const FavoritesScreen: React.FC = () => {
     if (!loggedIn || profile == null) {
       router.replace("/(auth)/login");
     }
-
-    // const fetchData = async () => {
+    let currentUser:IUser;
+     const fetchData = async () => {
     //   setIsLoading(true);
-    //   try {
+      try {
+        const user = await getUserById(profile!.id.toString())
+        currentUser = (user.data)
     //     console.log("Fetching products...");
     //     const productData = await getAllProducts();
     //     console.log("check");
@@ -60,13 +63,17 @@ const FavoritesScreen: React.FC = () => {
     //     console.log("Products: \n", products);
     //   } catch (error) {
     //     console.error("Fetch error:", error);
-    //   }
+      }
+      catch{
+        currentUser = profile!;
+      }
 
-    //   fetchData();
-    // }
+      fetchData();
+    }
     console.log("Profile: ", profile!.likedproduct);
 
     if (products.length > 0 && profile!.likedproduct) {
+      
       const likedProductIds = profile!.likedproduct;
       console.log("Liked product IDs:", likedProductIds);
 

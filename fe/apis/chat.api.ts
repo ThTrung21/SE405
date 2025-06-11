@@ -6,7 +6,9 @@ import { IConversation } from "interfaces/IConversation";
 export const createGenericConversation = (data: any) => {
 	return httpRequest.post("/chats/generic", data);
 };
-
+export const getChats=()=>{
+	return httpRequest.get("/chats");
+}
 // Create a conversation linked to an order
 export const createOrderConversation = (data: any) => {
 	return httpRequest.post("/chats/order", data);
