@@ -14,7 +14,7 @@ then run with:
 npm run dev
 ```
 
-<h1>FronEnd</h1>
+<h1>FrontEnd</h1>
 Go to fe and install packages with:
 ```bash
 npm install
